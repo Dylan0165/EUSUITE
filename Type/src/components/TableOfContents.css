@@ -1,0 +1,140 @@
+.toc {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.toc h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-item {
+  margin-bottom: 6px;
+}
+
+.toc-link {
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  color: #0078d4;
+}
+
+.toc-link:hover {
+  background-color: #f3f6fb;
+}
+
+.toc-level-1 .toc-link { font-weight: 700; }
+.toc-level-2 .toc-link { font-weight: 600; }
+.toc-level-3 .toc-link { font-weight: 500; }
+.toc-container {
+  background-color: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  padding: 24px;
+  margin: 24px 0;
+  page-break-inside: avoid;
+}
+
+.toc-title {
+  font-size: 18pt;
+  font-weight: bold;
+  color: #2E74B5;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #2E74B5;
+}
+
+.toc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toc-item {
+  display: flex;
+  align-items: baseline;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+  font-size: 11pt;
+}
+
+.toc-item:hover {
+  background-color: #f0f0f0;
+}
+
+.toc-level-1 {
+  font-weight: bold;
+  margin-left: 0;
+  font-size: 12pt;
+  color: #2E74B5;
+}
+
+.toc-level-2 {
+  margin-left: 20px;
+  font-weight: 600;
+  color: #1F4D78;
+}
+
+.toc-level-3 {
+  margin-left: 40px;
+  font-weight: normal;
+  color: #333;
+}
+
+.toc-level-4 {
+  margin-left: 60px;
+  font-weight: normal;
+  color: #555;
+  font-size: 10pt;
+}
+
+.toc-level-5,
+.toc-level-6 {
+  margin-left: 80px;
+  font-weight: normal;
+  color: #666;
+  font-size: 10pt;
+  font-style: italic;
+}
+
+.toc-text {
+  flex-shrink: 0;
+  max-width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toc-dots {
+  flex: 1;
+  border-bottom: 1px dotted #999;
+  margin: 0 8px;
+  min-width: 20px;
+}
+
+.toc-page {
+  flex-shrink: 0;
+  font-weight: normal;
+  color: #666;
+}
+
+@media print {
+  .toc-item {
+    cursor: default;
+  }
+  
+  .toc-item:hover {
+    background-color: transparent;
+  }
+}

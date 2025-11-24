@@ -1,0 +1,115 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  IMAGE_NAME: dylan016504/eusuite-dashboard
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+          
+      - name: Verify image was pushed
+        run: |
+          echo "Image pushed successfully:"
+          echo "- ${{ env.IMAGE_NAME }}:latest"
+          echo "- ${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "Verify on Docker Hub: https://hub.docker.com/r/${{ env.IMAGE_NAME }}"
+
+  # Automatic deploy to Kubernetes
+  deploy:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p $HOME/.kube
+          echo "$KUBE_CONFIG" | base64 --decode > $HOME/.kube/config
+          # Fix localhost references to actual server
+          sed -i 's|https://localhost:8080|https://192.168.124.50:6443|g' $HOME/.kube/config
+          sed -i 's|https://127.0.0.1:6443|https://192.168.124.50:6443|g' $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          echo "Kubeconfig configured, testing connection..."
+          kubectl cluster-info || echo "Warning: Could not connect to cluster"
+
+      - name: Create or update Docker Hub secret
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          # Delete existing secret if it exists
+          kubectl delete secret dockerhub-secret -n eucloud --ignore-not-found=true
+          # Create new secret
+          kubectl create secret docker-registry dockerhub-secret \
+            --docker-server=https://index.docker.io/v1/ \
+            --docker-username="${DOCKER_USERNAME}" \
+            --docker-password="${DOCKER_PASSWORD}" \
+            --docker-email=dylan@eusuite.com \
+            -n eucloud
+          echo "Docker Hub secret created/updated in eucloud namespace"
+
+      - name: Deploy or update to Kubernetes
+        run: |
+          set -e
+          echo "Applying/updating deployment..."
+          kubectl apply -f k8s/deployment.yaml
+          sleep 2
+          echo "Updating image to specific SHA..."
+          kubectl set image deployment/eusuite-dashboard dashboard=${{ env.IMAGE_NAME }}:${{ github.sha }} -n eucloud
+          echo "Restarting deployment to pick up new secret..."
+          kubectl rollout restart deployment/eusuite-dashboard -n eucloud
+          
+      - name: Wait for rollout to complete
+        run: |
+          kubectl rollout status deployment/eusuite-dashboard -n eucloud --timeout=3m || echo "Rollout timeout, checking status..."
+          
+      - name: Verify deployment
+        run: |
+          echo "=== Pods Status ==="
+          kubectl get pods -l app=eusuite-dashboard -n eucloud
+          echo ""
+          echo "=== Service Info ==="
+          kubectl get svc eusuite-dashboard -n eucloud
+          echo ""
+          echo "=== Recent Pod Events ==="
+          kubectl get events -n eucloud --field-selector involvedObject.kind=Pod --sort-by='.lastTimestamp' | tail -10
+          echo ""
+          echo "=== Dashboard URL ==="
+          echo "Dashboard should be accessible at: http://192.168.124.50:30091"

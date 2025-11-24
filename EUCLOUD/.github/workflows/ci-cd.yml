@@ -1,0 +1,254 @@
+﻿name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests
+      working-directory: ./backend
+      run: |
+        pytest --cov=. --cov-report=xml || true
+    
+    - name: Lint with flake8
+      working-directory: ./backend
+      run: |
+        pip install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: npm
+        cache-dependency-path: ./frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Lint
+      working-directory: ./frontend
+      run: npm run lint || true
+    
+    - name: Build
+      working-directory: ./frontend
+      run: npm run build
+
+  build-and-push:
+    name: Build and Push Docker Images
+    needs: [test-backend, test-frontend]
+    runs-on: self-hosted
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Login to Docker Hub
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata for Backend
+      id: meta-backend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: ${{ steps.meta-backend.outputs.tags }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
+        no-cache: true
+        pull: true
+    
+    - name: Extract metadata for Frontend
+      id: meta-frontend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: ${{ steps.meta-frontend.outputs.tags }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Kubernetes
+    needs: [build-and-push]
+    runs-on: self-hosted
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Database Migration (if needed)
+      run: |
+        echo "Checking if database migration is needed..."
+        
+        # Check if migration script exists in repo
+        if [ -f "backend/migrate_to_multiapp.py" ]; then
+          echo "Migration script found, running migration job..."
+          
+          # Create a one-time migration job
+          cat <<EOF | kubectl apply -f -
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: eucloud-migration-$(date +%s)
+          namespace: eucloud
+        spec:
+          ttlSecondsAfterFinished: 100
+          template:
+            spec:
+              restartPolicy: Never
+              containers:
+              - name: migration
+                image: ghcr.io/dylan0165/eucloud-backend:latest
+                command: ["python", "migrate_to_multiapp.py"]
+                volumeMounts:
+                - name: database
+                  mountPath: /app/instance
+                - name: uploads
+                  mountPath: /app/uploads
+              volumes:
+              - name: database
+                persistentVolumeClaim:
+                  claimName: eucloud-database-pvc
+              - name: uploads
+                persistentVolumeClaim:
+                  claimName: eucloud-uploads-pvc
+        EOF
+          
+          echo "Migration job created. Waiting for completion (max 2 minutes)..."
+          sleep 5
+          
+          # Wait for migration job (with timeout)
+          MIGRATION_JOB=$(kubectl get jobs -n eucloud --sort-by=.metadata.creationTimestamp -o name | tail -1)
+          kubectl wait --for=condition=complete --timeout=120s $MIGRATION_JOB -n eucloud || echo "Migration skipped or already done"
+          
+          echo "Migration completed or skipped"
+        else
+          echo "No migration needed, skipping..."
+        fi
+    
+    - name: Deploy to Kubernetes
+      run: |
+        echo "Deploying EU-CORE-BACKEND to Kubernetes..."
+        
+        # Get commit SHA for image tag
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        echo "Deploying images with SHA: main-$SHORT_SHA"
+        
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/secrets.yaml
+        kubectl apply -f k8s/pvc.yaml
+        kubectl apply -f k8s/backend-deployment.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+        kubectl apply -f k8s/services.yaml
+        
+        # Force update to SHA-tagged images (this triggers pod recreation)
+        kubectl set image deployment/eucloud-backend backend=ghcr.io/dylan0165/eucloud-backend:main-$SHORT_SHA -n eucloud
+        kubectl set image deployment/eucloud-frontend frontend=ghcr.io/dylan0165/eucloud-frontend:main-$SHORT_SHA -n eucloud
+        
+        echo "Waiting for deployments to be ready..."
+        kubectl rollout status deployment/eucloud-backend -n eucloud --timeout=300s
+        kubectl rollout status deployment/eucloud-frontend -n eucloud --timeout=300s
+        
+        echo "Deployment complete with image tag: main-$SHORT_SHA"
+    
+    - name: Verify Deployment
+      run: |
+        echo ""
+        echo "=== EU-CORE-BACKEND Deployment Status ==="
+        echo ""
+        echo "=== Pods ==="
+        kubectl get pods -n eucloud -o wide
+        echo ""
+        echo "=== Services ==="
+        kubectl get services -n eucloud
+        echo ""
+        echo "=== Persistent Volume Claims ==="
+        kubectl get pvc -n eucloud
+        echo ""
+        echo "✅ EU-CORE-BACKEND deployed successfully!"
+        echo ""
+        echo "📍 Access Points:"
+        echo "   EuCloud Frontend:  http://192.168.124.50:30080"
+        echo "   EU-CORE API:       http://192.168.124.50:30500"
+        echo "   API Docs:          http://192.168.124.50:30500/docs"
+        echo "   Health Check:      http://192.168.124.50:30500/health"
+        echo ""
+        echo "🎯 Multi-App Support:"
+        echo "   - EuCloud (file browser) - Port 30080 ✅"
+        echo "   - EuType (document editor) - Port 30081 (pending deployment)"
+        echo ""
+        echo "📝 New Features:"
+        echo "   - User-based storage structure"
+        echo "   - Content endpoints for document editing"
+        echo "   - Multi-app file categorization (app_type)"

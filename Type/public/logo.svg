@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0078d4"/>
+  
+  <!-- Paper/Document shape -->
+  <rect x="128" y="96" width="256" height="320" fill="white" rx="8"/>
+  <path d="M 320 96 L 384 160 L 384 96 Z" fill="#e8e8e8"/>
+  
+  <!-- EU letters -->
+  <text x="256" y="220" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="#0078d4" text-anchor="middle">EU</text>
+  
+  <!-- TYPE text -->
+  <text x="256" y="300" font-family="Arial, sans-serif" font-size="48" font-weight="600" fill="#2b579a" text-anchor="middle">TYPE</text>
+  
+  <!-- Lines representing text -->
+  <line x1="160" y1="340" x2="352" y2="340" stroke="#c0c0c0" stroke-width="4"/>
+  <line x1="160" y1="360" x2="320" y2="360" stroke="#c0c0c0" stroke-width="4"/>
+  <line x1="160" y1="380" x2="340" y2="380" stroke="#c0c0c0" stroke-width="4"/>
+</svg>

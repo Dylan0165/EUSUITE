@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eusuite-login
+  namespace: eucloud
+  labels:
+    app: eusuite-login
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: eusuite-login
+  template:
+    metadata:
+      labels:
+        app: eusuite-login
+    spec:
+      imagePullSecrets:
+      - name: dockerhub-secret
+      containers:
+      - name: eusuite-login
+        image: docker.io/dylan016504/eusuite-login:latest
+        imagePullPolicy: Always
+        env:
+        - name: CACHE_BUST
+          value: "{{ GITHUB_SHA }}"
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      restartPolicy: Always
