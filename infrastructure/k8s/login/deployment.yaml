@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eusuite-login
+  namespace: eucloud
+  labels:
+    app: eusuite-login
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: eusuite-login
+  template:
+    metadata:
+      labels:
+        app: eusuite-login
+    spec:
+      imagePullSecrets:
+      - name: docker-registry-secret
+      containers:
+      - name: login
+        image: dylan016504/eusuite-login:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eucloud-frontend
+  namespace: eucloud
+  labels:
+    app: eucloud-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: eucloud-frontend
+  template:
+    metadata:
+      labels:
+        app: eucloud-frontend
+    spec:
+      imagePullSecrets:
+      - name: docker-registry-secret
+      containers:
+      - name: frontend
+        image: dylan016504/eucloud-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
