@@ -101,14 +101,6 @@ jobs:
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      # --- DEPLOY DASHBOARD ---
-      - name: Deploy Dashboard
-        run: |
-          # Update image tag
-          sed -i 's|image: .*eusuite-dashboard:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_DASHBOARD }}:${{ github.sha }}|g' Applicationstartupdash/k8s/deployment.yaml
-          # Apply
-          kubectl apply -f Applicationstartupdash/k8s/deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
-
       # --- DEPLOY EUCLOUD ---
       - name: Deploy EUCLOUD
         run: |
@@ -124,6 +116,14 @@ jobs:
           if [ -f EUCLOUD/k8s/services.yaml ]; then kubectl apply -f EUCLOUD/k8s/services.yaml -n ${{ env.KUBE_NAMESPACE }}; fi
           kubectl apply -f EUCLOUD/k8s/frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f EUCLOUD/k8s/backend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+
+      # --- DEPLOY DASHBOARD ---
+      - name: Deploy Dashboard
+        run: |
+          # Update image tag
+          sed -i 's|image: .*eusuite-dashboard:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_DASHBOARD }}:${{ github.sha }}|g' Applicationstartupdash/k8s/deployment.yaml
+          # Apply
+          kubectl apply -f Applicationstartupdash/k8s/deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
 
       # --- DEPLOY LOGIN PAGE ---
       - name: Deploy Login Page
