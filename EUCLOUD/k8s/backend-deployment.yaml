@@ -19,10 +19,10 @@ spec:
     spec:
       containers:
       - name: backend
-        image: ghcr.io/dylan0165/eucloud-backend:latest
+        image: dylan016504/eucloud-backend:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 5000
+        - containerPort: 8000
           name: http
         env:
         - name: DEPLOYMENT_TIMESTAMP

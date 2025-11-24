@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/dylan0165/eucloud-frontend:latest
+        image: dylan016504/eucloud-frontend:latest
         imagePullPolicy: Always
         env:
         - name: DEPLOYMENT_TIMESTAMP

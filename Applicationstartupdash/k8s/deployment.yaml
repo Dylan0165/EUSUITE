@@ -19,7 +19,7 @@ spec:
       - name: dockerhub-secret
       containers:
       - name: dashboard
-        image: dylan0165/eusuite-dashboard:latest
+        image: dylan016504/eusuite-dashboard:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
