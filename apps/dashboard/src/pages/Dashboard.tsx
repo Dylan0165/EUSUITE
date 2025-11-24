@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardCard } from '../components/DashboardCard';
 import { 
   Cloud, Type, User, Settings, Calendar, Clock, Plus, 
-  FileText, FolderOpen, CheckCircle, Bell, TrendingUp,
+  FolderOpen, Bell, TrendingUp,
   ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { EUCLOUD_URL, EUTYPE_URL } from '../config/constants';
@@ -23,10 +23,7 @@ export const Dashboard = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>(() => {
     const saved = localStorage.getItem('eusuite-events');
-    return saved ? JSON.parse(saved) : [
-      { id: '1', title: 'Team Meeting', date: '2025-11-25', time: '10:00', color: 'emerald' },
-      { id: '2', title: 'Project Deadline', date: '2025-11-28', time: '17:00', color: 'amber' },
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', color: 'emerald' });
@@ -121,17 +118,17 @@ export const Dashboard = () => {
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 5);
 
-  // Quick stats
+  // Real stats based on actual data
   const stats = [
-    { label: 'Documenten', value: '12', icon: FileText, color: 'text-rose-500' },
-    { label: 'Bestanden', value: '48', icon: FolderOpen, color: 'text-blue-500' },
-    { label: 'Taken gedaan', value: '8', icon: CheckCircle, color: 'text-emerald-500' },
-    { label: 'Meldingen', value: '3', icon: Bell, color: 'text-amber-500' },
+    { label: 'Apps', value: '4', icon: FolderOpen, color: 'text-emerald-500' },
+    { label: 'Events', value: String(events.length), icon: Calendar, color: 'text-amber-500' },
+    { label: 'Vandaag', value: String(todaysEvents.length), icon: Clock, color: 'text-blue-500' },
+    { label: 'Komend', value: String(upcomingEvents.length), icon: Bell, color: 'text-rose-500' },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-900 dark:to-stone-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-6 lg:px-10 py-8">
         
         {/* Top Section: Welcome + Clock */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

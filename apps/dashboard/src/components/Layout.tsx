@@ -18,7 +18,7 @@ export const Layout = ({ children, user, onLogout }: LayoutProps) => {
     <div className="min-h-screen bg-stone-100 dark:bg-stone-900 transition-colors duration-200 flex flex-col">
       {/* Header - Rolex Green/Gold Theme */}
       <header className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 shadow-lg border-b-2 border-amber-500/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 lg:px-10">
           <div className="flex justify-between items-center h-18 py-3">
             {/* Logo */}
             <div className="flex items-center gap-4">
@@ -76,7 +76,7 @@ export const Layout = ({ children, user, onLogout }: LayoutProps) => {
 
       {/* Footer - Premium feel */}
       <footer className="bg-emerald-950 border-t border-amber-500/20 py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="w-full px-6 text-center">
           <p className="text-amber-200/60 text-sm tracking-wide">
             © 2025 EUsuite Platform • Premium Cloud Solutions
           </p>
