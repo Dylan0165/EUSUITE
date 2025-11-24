@@ -134,23 +134,31 @@ export default function FilePicker() {
     { id: 'report', icon: '📊', name: 'Rapport', description: 'Gestructureerd rapport' },
   ]
 
+  const DASHBOARD_URL = 'http://192.168.124.50:30091'
+
   return (
     <div className="filepicker-container">
       {/* Header */}
       <header className="filepicker-header">
         <div className="filepicker-header-content">
           <div className="filepicker-brand">
+            <a href={DASHBOARD_URL} className="back-to-dashboard" title="Terug naar Dashboard">
+              <img src="/eusuite-logo.png" alt="EUsuite" className="brand-logo" />
+            </a>
             <h1>
-              📝 EUTYPE
-              <span className="sso-badge">SSO</span>
+              EUTYPE
+              <span className="app-badge">DOC</span>
             </h1>
             {user && (
               <span className="filepicker-user-info">
-                Welkom, {user.username || user.email}
+                {user.username || user.email}
               </span>
             )}
           </div>
           <div className="filepicker-actions">
+            <a href={DASHBOARD_URL} className="btn-dashboard">
+              ← Dashboard
+            </a>
             <button
               onClick={() => setShowNewDocModal(true)}
               className="btn-new-doc"

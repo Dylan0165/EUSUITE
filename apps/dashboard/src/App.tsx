@@ -9,12 +9,13 @@ import './App.css';
 function AppContent() {
   const { user, loading, logout } = useAuth();
 
-  // Show loading screen while validating SSO session
+  // Show loading screen while validating SSO session - Rolex green/gold theme
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-cyan-500 via-blue-500 to-blue-600">
-        <div className="text-white text-3xl font-bold mb-6 tracking-wider">EUSUITE</div>
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900">
+        <img src="/eusuite-logo.png" alt="EUsuite" className="h-16 mb-4" />
+        <div className="text-amber-400 text-3xl font-bold mb-6 tracking-wider">EUSUITE</div>
+        <div className="w-12 h-12 border-4 border-amber-400/30 border-t-amber-400 rounded-full animate-spin"></div>
         <p className="mt-4 text-white/90">SSO authenticatie valideren...</p>
       </div>
     );
@@ -23,7 +24,7 @@ function AppContent() {
   // If no user after loading, useAuth has already redirected to login portal
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-cyan-500 via-blue-500 to-blue-600">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900">
         <p className="text-white/90">Doorsturen naar login portaal...</p>
       </div>
     );

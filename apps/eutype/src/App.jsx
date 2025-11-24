@@ -25,10 +25,11 @@ function App() {
         height: '100vh',
         flexDirection: 'column',
         gap: '1.5rem',
-        background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+        background: 'linear-gradient(135deg, #722F37 0%, #5a252c 100%)',
         color: 'white'
       }}>
-        <div style={{ fontSize: '2rem', fontWeight: '700', letterSpacing: '2px' }}>📝 EUTYPE</div>
+        <img src="/eusuite-logo.png" alt="EUsuite" style={{ height: '48px', marginBottom: '8px' }} />
+        <div style={{ fontSize: '1.8rem', fontWeight: '700', letterSpacing: '2px' }}>EUTYPE</div>
         <div style={{
           width: '48px',
           height: '48px',

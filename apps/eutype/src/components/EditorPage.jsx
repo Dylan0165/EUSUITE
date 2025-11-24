@@ -11,6 +11,7 @@ import SearchPanel from './SearchPanel'
 import SaveDialog from './SaveDialog'
 
 const SSO_PORTAL_URL = 'http://192.168.124.50:30090'
+const DASHBOARD_URL = 'http://192.168.124.50:30091'
 
 export default function EditorPage() {
   const navigate = useNavigate()
@@ -327,10 +328,11 @@ export default function EditorPage() {
         height: '100vh',
         flexDirection: 'column',
         gap: '1.5rem',
-        background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+        background: 'linear-gradient(135deg, #722F37 0%, #5a252c 100%)',
         color: 'white'
       }}>
-        <div style={{ fontSize: '2rem', fontWeight: '700', letterSpacing: '2px' }}>EUTYPE</div>
+        <img src="/eusuite-logo.png" alt="EUsuite" style={{ height: '48px' }} />
+        <div style={{ fontSize: '1.8rem', fontWeight: '700', letterSpacing: '2px' }}>EUTYPE</div>
         <div className="loading-spinner" style={{
           width: '48px',
           height: '48px',
@@ -340,6 +342,7 @@ export default function EditorPage() {
           animation: 'spin 1s linear infinite'
         }}></div>
         <div style={{ fontSize: '1rem', opacity: 0.9 }}>Document laden...</div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
@@ -348,14 +351,17 @@ export default function EditorPage() {
     <div className="app">
       {/* Top Bar */}
       <div style={{
-        background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+        background: 'linear-gradient(135deg, #722F37 0%, #5a252c 100%)',
         padding: '12px 20px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        boxShadow: '0 2px 10px rgba(124, 58, 237, 0.3)'
+        boxShadow: '0 2px 10px rgba(114, 47, 55, 0.3)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <a href={DASHBOARD_URL} style={{ display: 'flex', alignItems: 'center' }}>
+            <img src="/eusuite-logo.png" alt="EUsuite" style={{ height: '32px' }} />
+          </a>
           <button
             onClick={handleBackToFiles}
             style={{
@@ -396,7 +402,7 @@ export default function EditorPage() {
             disabled={saving || !hasUnsavedChanges}
             style={{
               background: 'white',
-              color: '#7c3aed',
+              color: '#722F37',
               border: 'none',
               padding: '8px 20px',
               borderRadius: '8px',
@@ -422,6 +428,20 @@ export default function EditorPage() {
           >
             Opslaan als...
           </button>
+          <a
+            href={DASHBOARD_URL}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.2)',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              textDecoration: 'none'
+            }}
+          >
+            Dashboard
+          </a>
           <button
             onClick={handleLogout}
             style={{

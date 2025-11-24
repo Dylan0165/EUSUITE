@@ -38,7 +38,7 @@
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid var(--border-color, #dee2e6);
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #722F37 0%, #5a252c 100%);
 }
 
 .save-dialog-header h2 {
@@ -100,14 +100,14 @@
 }
 
 .save-option:hover {
-  border-color: #7c3aed;
+  border-color: #722F37;
   background: white;
 }
 
 .save-option.selected {
-  border-color: #7c3aed;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(109, 40, 217, 0.08) 100%);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+  border-color: #722F37;
+  background: linear-gradient(135deg, rgba(114, 47, 55, 0.05) 0%, rgba(109, 40, 217, 0.08) 100%);
+  box-shadow: 0 0 0 4px rgba(114, 47, 55, 0.1);
 }
 
 .option-icon {
@@ -150,7 +150,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #7c3aed;
+  background: #722F37;
   color: white;
   display: flex;
   align-items: center;
@@ -220,15 +220,15 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #722F37 0%, #5a252c 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 12px rgba(114, 47, 55, 0.3);
   transition: all 0.2s;
 }
 
 .btn-save:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 6px 16px rgba(114, 47, 55, 0.4);
 }
 
 .btn-save:disabled {

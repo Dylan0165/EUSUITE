@@ -61,8 +61,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://192.168.124.50:30090",  # EUsuite Login Portal
-        "http://192.168.124.50:30091",  # EUsuite Login Portal (alt)
-        "http://192.168.124.50:30080",  # EuCloud Dashboard
+        "http://192.168.124.50:30091",  # EUsuite Dashboard
+        "http://192.168.124.50:30080",  # EuCloud Frontend
         "http://192.168.124.50:30081",  # EuType (document editor)
         "http://192.168.124.50:30500",  # Backend API (self)
         "http://192.168.124.50:30600",  # EuType (production port)
@@ -74,8 +74,8 @@ app.add_middleware(
         "http://localhost:30090"
     ],
     allow_credentials=True,              # ⭐ CRITICAL for SSO cookies
-    allow_methods=["GET", "POST", "OPTIONS"],  # Explicit methods for security
-    allow_headers=["Content-Type", "Authorization"],  # Explicit headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # All methods
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
     expose_headers=["Set-Cookie"],       # ⭐ Expose Set-Cookie header for credentials
 )
 
