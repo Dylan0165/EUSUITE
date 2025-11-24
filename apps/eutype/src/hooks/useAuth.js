@@ -2,24 +2,18 @@ import { useState, useEffect, useCallback } from 'react';
 
 const API_BASE_URL = "http://192.168.124.50:30500";
 const LOGIN_URL = "http://192.168.124.50:30090/login";
+const EUTYPE_BASE_URL = "http://192.168.124.50:30081";
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const getRedirectPath = () => {
-    let currentPath = window.location.pathname + window.location.search;
-    // Fix: Remove /eutype if present (legacy path) to prevent loops
-    if (currentPath.startsWith('/eutype')) {
-      currentPath = currentPath.replace('/eutype', '');
-    }
-    return currentPath || "/";
-  };
-
   const redirectToLogin = () => {
-    const redirect = window.location.href;
-    window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent(redirect)}`;
+    // Use full EUType base URL as redirect target
+    // This ensures after login, user returns to EUType at the correct port
+    const redirectUrl = EUTYPE_BASE_URL + window.location.pathname + window.location.search;
+    window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
   const validateAuth = useCallback(async () => {

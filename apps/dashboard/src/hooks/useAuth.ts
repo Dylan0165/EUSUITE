@@ -2,10 +2,18 @@ import { useState, useEffect } from 'react';
 import { API_BASE_URL, LOGIN_URL } from '../config/constants';
 import type { User } from '../types/auth';
 
+// Dashboard base URL
+const DASHBOARD_BASE_URL = 'http://192.168.124.50:30091';
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const getRedirectUrl = () => {
+    // Build full URL with Dashboard base
+    return DASHBOARD_BASE_URL + window.location.pathname + window.location.search;
+  };
 
   const validateAuth = async () => {
     try {
@@ -25,7 +33,7 @@ export const useAuth = () => {
         setError('Not authenticated');
         
         // Redirect naar login met full URL als redirect parameter
-        const redirectUrl = window.location.href;
+        const redirectUrl = getRedirectUrl();
         window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent(redirectUrl)}`;
         return; // Stop verdere verwerking
       }
@@ -83,8 +91,8 @@ export const useAuth = () => {
       
       setUser(null);
       
-      // ✅ Na logout altijd redirect naar login
-      window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent('/dashboard')}`;
+      // ✅ Na logout redirect naar login met dashboard als target
+      window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent(DASHBOARD_BASE_URL + '/dashboard')}`;
     } catch (err) {
       console.error('Logout request failed:', err);
       

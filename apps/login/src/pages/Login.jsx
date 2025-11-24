@@ -3,42 +3,57 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import './Login.css'
 
 const API_BASE_URL = 'http://192.168.124.50:30500/api/auth/login'
-const DEFAULT_REDIRECT = '/dashboard'
+const DEFAULT_REDIRECT = 'http://192.168.124.50:30091/dashboard'
+
+// App base URLs mapping
+const APP_URLS = {
+  eutype: 'http://192.168.124.50:30081',
+  eucloud: 'http://192.168.124.50:30080',
+  dashboard: 'http://192.168.124.50:30091',
+  login: 'http://192.168.124.50:30090'
+}
 
 /**
- * Normaliseer de redirect parameter naar een relative path
+ * Bepaal de finale redirect URL
  * @param {string} redirect - De redirect parameter uit de URL
- * @returns {string} - Een genormaliseerde relative path
+ * @returns {string} - De volledige URL om naar te redirecten na login
  */
-function normalizeRedirect(redirect) {
+function getFinalRedirectUrl(redirect) {
   if (!redirect || redirect.trim() === '') {
     return DEFAULT_REDIRECT
   }
 
-  // Als het een absolute URL is, haal alleen pathname + search op
+  // Als het al een volledige URL is, gebruik die direct
+  // Maar filter login portal URLs om loops te voorkomen
   if (redirect.startsWith('http://') || redirect.startsWith('https://')) {
     try {
       const url = new URL(redirect)
-      return url.pathname + url.search
+      // Voorkom redirect loops naar login portal
+      if (url.port === '30090' || url.pathname.includes('/login')) {
+        return DEFAULT_REDIRECT
+      }
+      return redirect
     } catch (e) {
       return DEFAULT_REDIRECT
     }
   }
 
-  // Zorg dat het begint met /
-  return redirect.startsWith('/') ? redirect : `/${redirect}`
-}
-
-/**
- * Bepaal het juiste app base domain op basis van de redirect path
- * @param {string} redirect - Een genormaliseerde redirect path
- * @returns {string} - Het base domain voor de app
- */
-function getAppBaseFromRedirect(redirect) {
-  if (redirect.startsWith('/eutype')) return 'http://192.168.124.50:30081'
-  if (redirect.startsWith('/eucloud')) return 'http://192.168.124.50:30080'
-  if (redirect.startsWith('/dashboard')) return 'http://192.168.124.50:30091'
-  return 'http://192.168.124.50:30091' // default dashboard
+  // Relative path - bepaal de juiste app base URL
+  const path = redirect.startsWith('/') ? redirect : `/${redirect}`
+  
+  // Check welke app op basis van path
+  if (path.startsWith('/eutype')) {
+    return APP_URLS.eutype + path.replace('/eutype', '')
+  }
+  if (path.startsWith('/eucloud') || path.startsWith('/cloud')) {
+    return APP_URLS.eucloud + path.replace('/eucloud', '').replace('/cloud', '')
+  }
+  if (path.startsWith('/dashboard')) {
+    return APP_URLS.dashboard + path
+  }
+  
+  // Default: dashboard met de path
+  return APP_URLS.dashboard + path
 }
 
 function Login() {
@@ -56,14 +71,14 @@ function Login() {
     setLoading(true)
 
     try {
-      // Lees en normaliseer de redirect parameter
+      // Bepaal de finale redirect URL
       const rawRedirect = searchParams.get('redirect')
-      const redirectPath = normalizeRedirect(rawRedirect)
+      const finalRedirectUrl = getFinalRedirectUrl(rawRedirect)
       
-      // Stuur POST request naar backend MET redirect query parameter
-      const apiUrl = `${API_BASE_URL}?redirect=${encodeURIComponent(redirectPath)}`
+      console.log('🔐 Login attempt - redirect will go to:', finalRedirectUrl)
       
-      const response = await fetch(apiUrl, {
+      // Stuur POST request naar backend
+      const response = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,19 +96,9 @@ function Login() {
         throw new Error(data.detail || data.message || 'Login failed')
       }
 
-      // Login succesvol!
-      // Als redirect een absolute URL is, gebruik die direct.
-      // Anders, fallback naar dashboard.
-      let targetUrl = redirectPath;
-      if (rawRedirect && (rawRedirect.startsWith('http://') || rawRedirect.startsWith('https://'))) {
-        targetUrl = rawRedirect;
-      } else {
-        // Fallback logic voor relative paths (legacy support)
-        const base = getAppBaseFromRedirect(redirectPath);
-        targetUrl = base + redirectPath;
-      }
-      
-      window.location.href = targetUrl;
+      // Login succesvol! Redirect naar de finale URL
+      console.log('✅ Login successful, redirecting to:', finalRedirectUrl)
+      window.location.href = finalRedirectUrl;
 
     } catch (err) {
       setError(err.message || 'Er ging iets mis. Probeer opnieuw.')

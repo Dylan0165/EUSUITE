@@ -3,7 +3,53 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import './Register.css'
 
 const API_URL = 'http://192.168.124.50:30500/api/auth/register'
-const DEFAULT_REDIRECT = 'http://192.168.124.50:30080'
+const DEFAULT_REDIRECT = 'http://192.168.124.50:30091/dashboard'
+
+// App base URLs mapping (same as Login.jsx)
+const APP_URLS = {
+  eutype: 'http://192.168.124.50:30081',
+  eucloud: 'http://192.168.124.50:30080',
+  dashboard: 'http://192.168.124.50:30091',
+  login: 'http://192.168.124.50:30090'
+}
+
+/**
+ * Bepaal de finale redirect URL (same logic as Login.jsx)
+ */
+function getFinalRedirectUrl(redirect) {
+  if (!redirect || redirect.trim() === '') {
+    return DEFAULT_REDIRECT
+  }
+
+  // Als het al een volledige URL is, gebruik die direct
+  if (redirect.startsWith('http://') || redirect.startsWith('https://')) {
+    try {
+      const url = new URL(redirect)
+      // Voorkom redirect loops naar login portal
+      if (url.port === '30090' || url.pathname.includes('/login') || url.pathname.includes('/register')) {
+        return DEFAULT_REDIRECT
+      }
+      return redirect
+    } catch (e) {
+      return DEFAULT_REDIRECT
+    }
+  }
+
+  // Relative path - bepaal de juiste app base URL
+  const path = redirect.startsWith('/') ? redirect : `/${redirect}`
+  
+  if (path.startsWith('/eutype')) {
+    return APP_URLS.eutype + path.replace('/eutype', '')
+  }
+  if (path.startsWith('/eucloud') || path.startsWith('/cloud')) {
+    return APP_URLS.eucloud + path.replace('/eucloud', '').replace('/cloud', '')
+  }
+  if (path.startsWith('/dashboard')) {
+    return APP_URLS.dashboard + path
+  }
+  
+  return APP_URLS.dashboard + path
+}
 
 function Register() {
   const [searchParams] = useSearchParams()
@@ -80,9 +126,11 @@ function Register() {
         throw new Error(errorData.detail || 'Registratie mislukt')
       }
 
-      // Registratie succesvol! Nu redirecten
-      const redirectUrl = searchParams.get('redirect') || DEFAULT_REDIRECT
-      window.location.href = redirectUrl
+      // Registratie succesvol! Nu redirecten naar juiste app
+      const rawRedirect = searchParams.get('redirect')
+      const finalRedirectUrl = getFinalRedirectUrl(rawRedirect)
+      console.log('✅ Registration successful, redirecting to:', finalRedirectUrl)
+      window.location.href = finalRedirectUrl
 
     } catch (err) {
       setError(err.message || 'Er ging iets mis. Probeer opnieuw.')
