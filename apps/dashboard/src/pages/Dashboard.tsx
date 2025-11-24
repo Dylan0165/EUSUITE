@@ -128,7 +128,7 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-900 dark:to-stone-800">
-      <div className="w-full px-6 lg:px-10 py-8">
+      <div className="px-4 lg:px-6 py-6">
         
         {/* Top Section: Welcome + Clock */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
