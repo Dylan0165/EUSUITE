@@ -3,12 +3,44 @@ from sqlalchemy.orm import Session
 import logging
 from urllib.parse import urlparse
 
-from models import get_db, User
+from models import get_db, User, Folder
 from schemas import UserRegister, UserLogin, AuthResponse
 from auth import create_access_token, get_current_user, COOKIE_NAME, COOKIE_MAX_AGE
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+def create_default_app_folders(db: Session, user_id: int):
+    """
+    Create default app folders for a new user.
+    
+    Default structure:
+    - Documents
+    - EUType (for .ty documents)
+    - Photos
+    - Shared
+    """
+    default_folders = [
+        "Documents",
+        "EUType",
+        "Photos",
+        "Shared"
+    ]
+    
+    try:
+        for folder_name in default_folders:
+            folder = Folder(
+                folder_name=folder_name,
+                owner_id=user_id,
+                parent_folder_id=None
+            )
+            db.add(folder)
+        db.commit()
+        logger.info(f"✅ Created default folders for user {user_id}: {default_folders}")
+    except Exception as e:
+        logger.error(f"Failed to create default folders for user {user_id}: {e}")
+        db.rollback()
 
 
 def normalize_redirect(redirect: str | None) -> str:
@@ -119,6 +151,10 @@ async def register(
             db.refresh(user)
             
             logger.info(f"User {user_data.email} registered successfully with ID: {user.user_id}")
+            
+            # 📁 Create default app folders for new user
+            create_default_app_folders(db, user.user_id)
+            
         except Exception as e:
             db.rollback()
             logger.error(f"Database error during registration for {user_data.email}: {str(e)}", exc_info=True)
@@ -328,7 +364,7 @@ async def validate_token(request: Request, db: Session = Depends(get_db)):
     This is used by all EUsuite apps to check if user is logged in.
     
     Returns:
-        - User info if token is valid
+        - User info if token is valid (consistent format for all apps)
         - 401 Unauthorized if token is invalid, expired, or missing
     """
     try:
@@ -368,9 +404,14 @@ async def validate_token(request: Request, db: Session = Depends(get_db)):
                 )
             
             logger.debug(f"Validate: Token valid for user {user.email}")
+            # CONSISTENT RESPONSE FORMAT for all EUsuite apps
+            # Both top-level fields AND nested user object for backwards compatibility
             return {
                 "valid": True,
-                "user": {
+                "username": user.email,  # Top-level for legacy apps
+                "email": user.email,     # Top-level for legacy apps
+                "user_id": user.user_id, # Top-level for legacy apps
+                "user": {                # Nested object for newer apps
                     "user_id": user.user_id,
                     "username": user.email,
                     "email": user.email

@@ -2,34 +2,25 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listEuTypeDocuments, createDocument, deleteFile, renameFile } from '../api/files'
 import { getCurrentUser } from '../api/auth'
-
-const SSO_PORTAL_URL = 'http://192.168.124.50:30090'
+import { useAuth } from '../hooks/useAuth'
+import './FilePicker.css'
 
 export default function FilePicker() {
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const [files, setFiles] = useState([])
   const [folders, setFolders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [user, setUser] = useState(null)
   const [showNewDocModal, setShowNewDocModal] = useState(false)
   const [newDocName, setNewDocName] = useState('')
   const [renamingFile, setRenamingFile] = useState(null)
   const [newFileName, setNewFileName] = useState('')
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
 
   useEffect(() => {
     loadFiles()
-    loadUser()
   }, [])
-
-  const loadUser = async () => {
-    try {
-      const userData = await getCurrentUser()
-      setUser(userData)
-    } catch (err) {
-      console.error('Failed to load user:', err)
-    }
-  }
 
   const loadFiles = async () => {
     setLoading(true)
@@ -46,20 +37,38 @@ export default function FilePicker() {
     }
   }
 
-  const handleCreateDocument = async () => {
-    if (!newDocName.trim()) {
-      alert('Voer een documentnaam in')
-      return
-    }
+  const handleCreateDocument = async (template = 'blank') => {
+    const name = newDocName.trim() || 'Naamloos document'
 
     try {
-      const result = await createDocument(newDocName, {
+      let initialContent = {
         html: '<p>Start met typen...</p>',
         text: 'Start met typen...'
-      })
+      }
+
+      // Different templates
+      if (template === 'letter') {
+        initialContent = {
+          html: `<p>Datum: ${new Date().toLocaleDateString('nl-NL')}</p><p><br></p><p>Geachte heer/mevrouw,</p><p><br></p><p>[Uw tekst hier]</p><p><br></p><p>Met vriendelijke groet,</p><p><br></p><p>[Uw naam]</p>`,
+          text: ''
+        }
+      } else if (template === 'meeting') {
+        initialContent = {
+          html: `<h1>Notulen - ${new Date().toLocaleDateString('nl-NL')}</h1><p><br></p><h2>Aanwezigen</h2><ul><li>[Naam]</li></ul><p><br></p><h2>Agendapunten</h2><ol><li>[Punt 1]</li></ol><p><br></p><h2>Actiepunten</h2><ul><li>[Actie]</li></ul>`,
+          text: ''
+        }
+      } else if (template === 'report') {
+        initialContent = {
+          html: `<h1>[Rapport Titel]</h1><p><br></p><h2>Samenvatting</h2><p>[Korte samenvatting]</p><p><br></p><h2>Inleiding</h2><p>[Inleiding tekst]</p><p><br></p><h2>Inhoud</h2><p>[Hoofdinhoud]</p><p><br></p><h2>Conclusie</h2><p>[Conclusie]</p>`,
+          text: ''
+        }
+      }
+
+      const result = await createDocument(name, initialContent)
 
       setShowNewDocModal(false)
       setNewDocName('')
+      setSelectedTemplate(null)
       
       // Open het nieuwe document
       navigate(`/editor?file=${result.file.id}`)
@@ -79,7 +88,7 @@ export default function FilePicker() {
 
     try {
       await deleteFile(fileId)
-      loadFiles() // Refresh lijst
+      loadFiles()
     } catch (err) {
       alert('Kan bestand niet verwijderen: ' + (err.response?.data?.detail || err.message))
     }
@@ -101,11 +110,6 @@ export default function FilePicker() {
     }
   }
 
-  const handleLogout = () => {
-    // Redirect to SSO portal for logout
-    window.location.href = `${SSO_PORTAL_URL}/logout`
-  }
-
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B'
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
@@ -122,29 +126,38 @@ export default function FilePicker() {
     })
   }
 
+  // Document templates for the startup screen
+  const templates = [
+    { id: 'blank', icon: '📄', name: 'Leeg document', description: 'Start met een leeg vel' },
+    { id: 'letter', icon: '✉️', name: 'Brief', description: 'Formele brief template' },
+    { id: 'meeting', icon: '📋', name: 'Notulen', description: 'Vergadering notities' },
+    { id: 'report', icon: '📊', name: 'Rapport', description: 'Gestructureerd rapport' },
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="filepicker-container">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-              ☁️ EUTYPE <span style={{fontSize: '22px'}}>🚀</span>
-              <span className="ml-2 px-2 py-1 rounded bg-white bg-opacity-20 text-xs font-semibold tracking-wide" style={{letterSpacing: '1px'}}>SSO actief</span>
+      <header className="filepicker-header">
+        <div className="filepicker-header-content">
+          <div className="filepicker-brand">
+            <h1>
+              📝 EUTYPE
+              <span className="sso-badge">SSO</span>
             </h1>
-            {user && <p className="text-sm text-blue-100 mt-1">Welkom terug, {user.username}</p>}
+            {user && (
+              <span className="filepicker-user-info">
+                Welkom, {user.username || user.email}
+              </span>
+            )}
           </div>
-          <div className="flex gap-3">
+          <div className="filepicker-actions">
             <button
               onClick={() => setShowNewDocModal(true)}
-              className="bg-white text-blue-600 px-4 py-2 rounded-md hover:bg-blue-50 flex items-center gap-2 font-semibold transition-colors"
+              className="btn-new-doc"
             >
               <span>📝</span> Nieuw document
             </button>
-            <button
-              onClick={handleLogout}
-              className="bg-blue-500 bg-opacity-30 text-white px-4 py-2 rounded-md hover:bg-opacity-40 transition-colors"
-            >
+            <button onClick={logout} className="btn-logout">
               Uitloggen
             </button>
           </div>
@@ -152,57 +165,64 @@ export default function FilePicker() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="filepicker-main">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
+          <div className="error-banner">{error}</div>
         )}
 
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Documenten laden...</p>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Documenten laden...</p>
           </div>
         ) : files.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-gray-900">Geen documenten</h3>
-            <p className="mt-2 text-gray-600">Maak je eerste EUTYPE document aan</p>
-            <button
-              onClick={() => setShowNewDocModal(true)}
-              className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-            >
-              Nieuw document
-            </button>
+          // Startup Screen - No Documents Yet
+          <div className="startup-screen">
+            <div className="startup-icon">📝</div>
+            <h2>Welkom bij EUTYPE</h2>
+            <p>
+              Je hebt nog geen documenten. Kies een template om te beginnen of maak een leeg document aan.
+            </p>
+            
+            <div className="template-grid">
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="template-card"
+                  onClick={() => {
+                    setSelectedTemplate(template.id)
+                    setShowNewDocModal(true)
+                  }}
+                >
+                  <div className="icon">{template.icon}</div>
+                  <h3>{template.name}</h3>
+                  <p>{template.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          // Documents List
+          <div className="documents-section">
+            <div className="documents-header">
+              <h2>📁 Mijn documenten</h2>
+            </div>
+            
+            <table className="documents-table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Naam
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Laatst gewijzigd
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Grootte
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acties
-                  </th>
+                  <th>Naam</th>
+                  <th>Laatst gewijzigd</th>
+                  <th>Grootte</th>
+                  <th></th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {files.map((file) => (
-                  <tr key={file.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                  <tr key={file.id}>
+                    <td>
                       {renamingFile === file.id ? (
-                        <div className="flex gap-2">
+                        <div className="rename-input-group">
                           <input
                             type="text"
                             value={newFileName}
@@ -214,12 +234,12 @@ export default function FilePicker() {
                                 setNewFileName('')
                               }
                             }}
-                            className="px-2 py-1 border rounded"
+                            className="rename-input"
                             autoFocus
                           />
                           <button
                             onClick={() => handleRenameFile(file.id)}
-                            className="text-green-600 hover:text-green-800"
+                            className="btn-confirm"
                           >
                             ✓
                           </button>
@@ -228,48 +248,48 @@ export default function FilePicker() {
                               setRenamingFile(null)
                               setNewFileName('')
                             }}
-                            className="text-red-600 hover:text-red-800"
+                            className="btn-icon"
                           >
                             ✕
                           </button>
                         </div>
                       ) : (
-                        <div className="flex items-center">
-                          <svg className="h-5 w-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                          </svg>
-                          <span className="font-medium text-gray-900">{file.filename}</span>
+                        <div className="file-name">
+                          <div className="file-icon">📄</div>
+                          <span>{file.filename}</span>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="file-meta">
                       {formatDate(file.modified_at || file.created_at)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="file-meta">
                       {formatFileSize(file.size)}
                     </td>
-                    <td className="px-6 py-4 text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleOpenDocument(file.id)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        Openen
-                      </button>
-                      <button
-                        onClick={() => {
-                          setRenamingFile(file.id)
-                          setNewFileName(file.filename.replace('.ty', ''))
-                        }}
-                        className="text-gray-600 hover:text-gray-900 mr-4"
-                      >
-                        Hernoemen
-                      </button>
-                      <button
-                        onClick={() => handleDeleteFile(file.id, file.filename)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Verwijderen
-                      </button>
+                    <td>
+                      <div className="file-actions">
+                        <button
+                          onClick={() => handleOpenDocument(file.id)}
+                          className="btn-open"
+                        >
+                          Openen
+                        </button>
+                        <button
+                          onClick={() => {
+                            setRenamingFile(file.id)
+                            setNewFileName(file.filename.replace('.ty', ''))
+                          }}
+                          className="btn-rename"
+                        >
+                          Hernoemen
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFile(file.id, file.filename)}
+                          className="btn-delete"
+                        >
+                          Verwijderen
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -277,35 +297,63 @@ export default function FilePicker() {
             </table>
           </div>
         )}
+
+        {/* Template Grid below documents if there are documents */}
+        {!loading && files.length > 0 && (
+          <div style={{ marginTop: '32px' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '600' }}>
+              Nieuw document starten
+            </h3>
+            <div className="template-grid" style={{ maxWidth: '100%' }}>
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="template-card"
+                  onClick={() => {
+                    setSelectedTemplate(template.id)
+                    setShowNewDocModal(true)
+                  }}
+                >
+                  <div className="icon">{template.icon}</div>
+                  <h3>{template.name}</h3>
+                  <p>{template.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* New Document Modal */}
       {showNewDocModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Nieuw document</h2>
+        <div className="modal-backdrop" onClick={() => setShowNewDocModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>
+              {selectedTemplate ? templates.find(t => t.id === selectedTemplate)?.name : 'Nieuw document'}
+            </h2>
             <input
               type="text"
               value={newDocName}
               onChange={(e) => setNewDocName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateDocument()}
-              placeholder="Documentnaam"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4"
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateDocument(selectedTemplate || 'blank')}
+              placeholder="Documentnaam (optioneel)"
+              className="modal-input"
               autoFocus
             />
-            <div className="flex justify-end gap-2">
+            <div className="modal-actions">
               <button
                 onClick={() => {
                   setShowNewDocModal(false)
                   setNewDocName('')
+                  setSelectedTemplate(null)
                 }}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                className="btn-cancel"
               >
                 Annuleren
               </button>
               <button
-                onClick={handleCreateDocument}
-                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                onClick={() => handleCreateDocument(selectedTemplate || 'blank')}
+                className="btn-create"
               >
                 Aanmaken
               </button>

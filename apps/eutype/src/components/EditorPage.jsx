@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getFileContent, updateFileContent, getFileMetadata } from '../api/files'
 import { getCurrentUser } from '../api/auth'
+import { useAuth } from '../hooks/useAuth'
 import RibbonToolbar from './RibbonToolbar'
 import Editor from './Editor'
 import StatusBar from './StatusBar'
 import NavigationPanel from './NavigationPanel'
 import SearchPanel from './SearchPanel'
+import SaveDialog from './SaveDialog'
 
 const SSO_PORTAL_URL = 'http://192.168.124.50:30090'
 
@@ -14,16 +16,17 @@ export default function EditorPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const fileId = searchParams.get('file')
+  const { user, logout } = useAuth()
 
   const [editor, setEditor] = useState(null)
   const [documentName, setDocumentName] = useState('Laden...')
   const [documentContent, setDocumentContent] = useState(null)
   const [showNavigation, setShowNavigation] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
-  const [user, setUser] = useState(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   // Redirect als geen file ID
@@ -32,19 +35,6 @@ export default function EditorPage() {
       navigate('/')
     }
   }, [fileId, navigate])
-
-  // Load user
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await getCurrentUser()
-        setUser(userData)
-      } catch (err) {
-        console.error('Failed to load user:', err)
-      }
-    }
-    loadUser()
-  }, [])
 
   // Load document
   useEffect(() => {
@@ -222,6 +212,49 @@ export default function EditorPage() {
     window.print()
   }
 
+  // Download document to local machine
+  const handleDownload = () => {
+    if (!editor) return
+
+    const tyContent = JSON.stringify({
+      version: '1.0',
+      type: 'EUTYPE Document',
+      name: documentName,
+      created: documentContent?.created || new Date().toISOString(),
+      modified: new Date().toISOString(),
+      html: editor.getHTML(),
+      text: editor.getText()
+    }, null, 2)
+
+    const blob = new Blob([tyContent], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${documentName}.ty`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    setShowSaveDialog(false)
+    
+    // Show feedback
+    const statusMsg = document.createElement('div')
+    statusMsg.textContent = '💾 Gedownload'
+    statusMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:12px 24px;border-radius:8px;z-index:9999;box-shadow:0 4px 6px rgba(0,0,0,0.1);'
+    document.body.appendChild(statusMsg)
+    setTimeout(() => statusMsg.remove(), 2000)
+  }
+
+  // Save to cloud (with dialog close)
+  const handleSaveToCloud = async () => {
+    await saveDocument(true)
+    setShowSaveDialog(false)
+  }
+
+  // Show save dialog for "Save As"
+  const handleSaveAs = () => {
+    setShowSaveDialog(true)
+  }
+
   const handleExport = (format) => {
     if (!editor) return
 
@@ -282,17 +315,31 @@ export default function EditorPage() {
         return
       }
     }
-    // Redirect to SSO portal for logout
-    window.location.href = `${SSO_PORTAL_URL}/logout`
+    logout()
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600">Document laden...</p>
-        </div>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+        color: 'white'
+      }}>
+        <div style={{ fontSize: '2rem', fontWeight: '700', letterSpacing: '2px' }}>EUTYPE</div>
+        <div className="loading-spinner" style={{
+          width: '48px',
+          height: '48px',
+          border: '4px solid rgba(255,255,255,0.3)',
+          borderTopColor: 'white',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <div style={{ fontSize: '1rem', opacity: 0.9 }}>Document laden...</div>
       </div>
     )
   }
@@ -300,36 +347,91 @@ export default function EditorPage() {
   return (
     <div className="app">
       {/* Top Bar */}
-      <div className="bg-white border-b px-4 py-2 flex justify-between items-center">
-        <div className="flex items-center gap-4">
+      <div style={{
+        background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+        padding: '12px 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        boxShadow: '0 2px 10px rgba(124, 58, 237, 0.3)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
             onClick={handleBackToFiles}
-            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
-            ← Terug naar bestanden
+            ← Bestanden
           </button>
-          <div className="border-l pl-4">
-            <span className="font-medium text-gray-700">{documentName}</span>
-            {hasUnsavedChanges && <span className="ml-2 text-orange-500">●</span>}
+          <div style={{ 
+            borderLeft: '1px solid rgba(255,255,255,0.2)', 
+            paddingLeft: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ fontWeight: '600', color: 'white', fontSize: '15px' }}>{documentName}</span>
+            {hasUnsavedChanges && <span style={{ color: '#fbbf24', fontSize: '20px' }}>●</span>}
             {lastSaved && !hasUnsavedChanges && (
-              <span className="ml-2 text-xs text-gray-500">
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
                 Opgeslagen om {lastSaved.toLocaleTimeString('nl-NL')}
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {user && <span className="text-sm text-gray-600">{user.username}</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {user && <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)' }}>{user.username || user.email}</span>}
           <button
             onClick={handleSave}
             disabled={saving || !hasUnsavedChanges}
-            className="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            style={{
+              background: 'white',
+              color: '#7c3aed',
+              border: 'none',
+              padding: '8px 20px',
+              borderRadius: '8px',
+              cursor: saving || !hasUnsavedChanges ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              opacity: saving || !hasUnsavedChanges ? 0.5 : 1
+            }}
           >
-            {saving ? 'Opslaan...' : 'Opslaan'}
+            {saving ? 'Opslaan...' : '☁️ Opslaan'}
+          </button>
+          <button
+            onClick={handleSaveAs}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            Opslaan als...
           </button>
           <button
             onClick={handleLogout}
-            className="text-gray-600 hover:text-gray-800 text-sm"
+            style={{
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.8)',
+              border: 'none',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
           >
             Uitloggen
           </button>
@@ -340,7 +442,7 @@ export default function EditorPage() {
         editor={editor}
         onNew={handleNewDocument}
         onSave={handleSave}
-        onSaveAs={() => handleExport('ty')}
+        onSaveAs={handleSaveAs}
         onExport={handleExport}
         onOpen={handleBackToFiles}
         onPrint={handlePrint}
@@ -362,6 +464,16 @@ export default function EditorPage() {
       
       {showSearch && <SearchPanel editor={editor} onClose={() => setShowSearch(false)} />}
       <StatusBar editor={editor} />
+
+      {/* Save Dialog */}
+      <SaveDialog
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        onSaveToCloud={handleSaveToCloud}
+        onDownload={handleDownload}
+        documentName={documentName}
+        saving={saving}
+      />
     </div>
   )
 }

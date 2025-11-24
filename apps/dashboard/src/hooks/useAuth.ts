@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL, LOGIN_URL } from '../config/constants';
 import type { User } from '../types/auth';
 
@@ -10,17 +10,22 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const getRedirectUrl = () => {
+  const getRedirectUrl = useCallback(() => {
     // Build full URL with Dashboard base
     return DASHBOARD_BASE_URL + window.location.pathname + window.location.search;
-  };
+  }, []);
 
-  const validateAuth = async () => {
+  const redirectToLogin = useCallback(() => {
+    const redirectUrl = getRedirectUrl();
+    window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent(redirectUrl)}`;
+  }, [getRedirectUrl]);
+
+  const validateAuth = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // ✅ Fetch naar backend op port 30500 (NIET 30091)
+      // ✅ Fetch naar backend op port 30500
       const response = await fetch(`${API_BASE_URL}/api/auth/validate`, {
         method: 'GET',
         credentials: 'include', // ✅ Stuurt eusuite_token cookie mee
@@ -28,65 +33,74 @@ export const useAuth = () => {
 
       // ✅ ALLEEN bij 401 redirect naar login
       if (response.status === 401) {
-        console.log('401 Unauthorized - Gebruiker niet ingelogd, redirect naar login');
+        console.log('Dashboard: 401 Unauthorized - redirecting to login');
         setUser(null);
         setError('Not authenticated');
-        
-        // Redirect naar login met full URL als redirect parameter
-        const redirectUrl = getRedirectUrl();
-        window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent(redirectUrl)}`;
-        return; // Stop verdere verwerking
+        redirectToLogin();
+        return;
       }
 
       // ✅ Bij andere fouten (500, 502, 503, etc): GEEN redirect
       if (!response.ok) {
         const errorMsg = `Backend error: ${response.status} ${response.statusText}`;
-        console.error(errorMsg);
+        console.error('Dashboard:', errorMsg);
         setError(errorMsg);
         setUser(null);
         setLoading(false);
-        return; // Stop, maar GEEN redirect
+        return;
       }
 
       // ✅ Response OK (200) - Parse JSON en valideer user data
       const data = await response.json();
       
-      if (data.valid && data.username) {
-        console.log('Auth validate succesvol:', data.username);
-        setUser({ 
+      if (data.valid) {
+        // Handle both response formats (user object or top-level fields)
+        const userData = data.user || { 
           username: data.username, 
-          email: data.email || '' 
-        });
-        setError(null);
+          email: data.email || '',
+          user_id: data.user_id 
+        };
+        
+        if (userData.username || userData.email) {
+          console.log('Dashboard: Auth validate successful:', userData.username || userData.email);
+          setUser({ 
+            username: userData.username, 
+            email: userData.email || '' 
+          });
+          setError(null);
+        } else {
+          console.warn('Dashboard: Invalid user data, redirecting');
+          setUser(null);
+          setError('Invalid response from backend');
+          redirectToLogin();
+        }
       } else {
-        // Data is niet valid, maar response was 200
-        // Dit is een backend inconsistentie - GEEN redirect
-        console.warn('Validate response was 200 maar data.valid is false');
+        console.warn('Dashboard: Validate response valid=false, redirecting');
         setUser(null);
-        setError('Invalid response from backend');
+        setError('Session not valid');
+        redirectToLogin();
       }
 
     } catch (err) {
       // ✅ Network errors, timeouts, CORS, JSON parse errors
       // GEEN redirect - dit zijn technische fouten
       const errorMsg = err instanceof Error ? err.message : 'Network error';
-      console.error('Validate request failed (network/timeout):', errorMsg);
+      console.error('Dashboard: Validate request failed (network/timeout):', errorMsg);
       setError(errorMsg);
       setUser(null);
-      // GEEN window.location.href hier!
     } finally {
       setLoading(false);
     }
-  };
+  }, [redirectToLogin]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
-      console.log('Logging out...');
+      console.log('Dashboard: Logging out...');
       
       // POST naar logout endpoint
       await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
-        credentials: 'include', // ✅ Stuurt cookie mee voor invalidatie
+        credentials: 'include',
       });
       
       setUser(null);
@@ -94,19 +108,17 @@ export const useAuth = () => {
       // ✅ Na logout redirect naar login met dashboard als target
       window.location.href = `${LOGIN_URL}?redirect=${encodeURIComponent(DASHBOARD_BASE_URL + '/dashboard')}`;
     } catch (err) {
-      console.error('Logout request failed:', err);
+      console.error('Dashboard: Logout request failed:', err);
       
       // ✅ Ook bij logout fout: toch redirect naar login
-      // (gebruiker wil uitloggen, dus stuur naar login)
       setUser(null);
       window.location.href = LOGIN_URL;
     }
-  };
+  }, []);
 
   useEffect(() => {
-    // ✅ Validate bij mount
     validateAuth();
-  }, []);
+  }, [validateAuth]);
 
   return { 
     user, 

@@ -25,11 +25,20 @@ function App() {
         height: '100vh',
         flexDirection: 'column',
         gap: '1.5rem',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
         color: 'white'
       }}>
-        <div style={{ fontSize: '2rem', fontWeight: '700', letterSpacing: '2px' }}>EUTYPE</div>
-        <div style={{ fontSize: '1rem', opacity: 0.95 }}>SSO authenticatie valideren...</div>
+        <div style={{ fontSize: '2rem', fontWeight: '700', letterSpacing: '2px' }}>📝 EUTYPE</div>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '4px solid rgba(255,255,255,0.3)',
+          borderTopColor: 'white',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <div style={{ fontSize: '1rem', opacity: 0.9 }}>SSO authenticatie valideren...</div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
