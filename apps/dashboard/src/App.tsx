@@ -7,7 +7,7 @@ import { Layout } from './components/Layout';
 import './App.css';
 
 function AppContent() {
-  const { user, loading, error, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   // Show loading screen while validating SSO session
   if (loading) {
