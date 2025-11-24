@@ -54,4 +54,4 @@ spec:
           claimName: eucloud-thumbnails-pvc
       - name: database
         persistentVolumeClaim:
-          claimName: eucloud-db-pvc
+          claimName: eucloud-database-pvc
