@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { 
   Cloud, Upload, FolderPlus, Search, Grid, List, 
-  Moon, Sun, LogOut, User, HardDrive, Trash2
+  Moon, Sun, LogOut, User, HardDrive, Trash2, Home
 } from 'lucide-react'
 import './Header.css'
+
+const DASHBOARD_URL = 'http://192.168.124.50:30091'
 
 function Header({ 
   user, 
@@ -56,16 +58,20 @@ function Header({
     <header className="header">
       <div className="header-content">
         <div className="header-left">
+          <a href={DASHBOARD_URL} className="dashboard-link" title="Terug naar Dashboard">
+            <img src="/eusuite-logo.png" alt="EUsuite" className="header-logo" />
+          </a>
           <div className="logo">
-            <Cloud size={28} />
+            <Cloud size={24} />
             <span>EUCLOUD</span>
+            <span className="app-badge">CLOUD</span>
           </div>
           
           <div className="search-bar">
             <Search size={18} />
             <input
               type="text"
-              placeholder="Search files..."
+              placeholder="Zoek bestanden..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -73,6 +79,11 @@ function Header({
         </div>
 
         <div className="header-right">
+          <a href={DASHBOARD_URL} className="btn btn-dashboard">
+            <Home size={18} />
+            Dashboard
+          </a>
+          
           <div className="header-actions">
             <button className="btn btn-primary" onClick={onUploadClick}>
               <Upload size={18} />
