@@ -9,13 +9,13 @@ import { Sent } from './pages/Sent';
 function App() {
   const { user, loading, error } = useAuth();
 
-  // Loading state with purple mail theme
+  // Loading state with rose gold theme
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-800 via-purple-700 to-purple-900">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600">
         <img src="/eusuite-logo.png" alt="EUSuite" className="h-16 mb-4" />
-        <div className="text-purple-200 text-3xl font-bold mb-6 tracking-wider">EUMAIL</div>
-        <div className="w-12 h-12 border-4 border-purple-300/30 border-t-purple-300 rounded-full animate-spin"></div>
+        <div className="text-white text-3xl font-bold mb-6 tracking-wider drop-shadow-lg">EUMAIL</div>
+        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
         <p className="mt-4 text-white/90">Authenticatie valideren...</p>
       </div>
     );
@@ -24,16 +24,16 @@ function App() {
   // Show error state (backend down, network issues, etc.)
   if (error && !user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-800 via-purple-700 to-purple-900">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600">
         <img src="/eusuite-logo.png" alt="EUSuite" className="h-16 mb-4" />
-        <div className="text-purple-200 text-3xl font-bold mb-6 tracking-wider">EUMAIL</div>
-        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 max-w-md">
-          <p className="text-red-200 text-center">{error}</p>
-          <p className="text-white/70 text-sm text-center mt-2">Probeer de pagina te vernieuwen</p>
+        <div className="text-white text-3xl font-bold mb-6 tracking-wider drop-shadow-lg">EUMAIL</div>
+        <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-6 max-w-md shadow-xl">
+          <p className="text-white text-center font-medium">{error}</p>
+          <p className="text-white/80 text-sm text-center mt-2">Probeer de pagina te vernieuwen</p>
         </div>
         <button 
           onClick={() => window.location.reload()} 
-          className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+          className="mt-4 px-6 py-3 bg-white text-rose-600 font-semibold rounded-xl hover:bg-rose-50 transition-all shadow-lg hover:shadow-xl"
         >
           Opnieuw proberen
         </button>
@@ -44,7 +44,7 @@ function App() {
   // Redirect to login if not authenticated (handled by useAuth)
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-800 via-purple-700 to-purple-900">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600">
         <p className="text-white/90">Doorsturen naar login portaal...</p>
       </div>
     );

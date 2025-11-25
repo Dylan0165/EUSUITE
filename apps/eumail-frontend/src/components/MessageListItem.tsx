@@ -18,30 +18,30 @@ export function MessageListItem({ message, type = 'inbox' }: MessageListItemProp
   return (
     <Link
       to={`/mail/read/${message.id}`}
-      className={`flex items-center gap-4 p-4 border-b border-gray-100 hover:bg-purple-50 transition-colors ${
-        !message.is_read && type === 'inbox' ? 'bg-purple-50/50' : 'bg-white'
+      className={`flex items-center gap-4 p-4 border-b border-rose-100 hover:bg-gradient-to-r hover:from-rose-50 hover:to-pink-50 transition-all ${
+        !message.is_read && type === 'inbox' ? 'bg-gradient-to-r from-rose-50/50 to-pink-50/50' : 'bg-white/80'
       }`}
     >
       {/* Icon */}
-      <div className={`p-2 rounded-full ${message.is_read ? 'bg-gray-100' : 'bg-purple-100'}`}>
+      <div className={`p-2.5 rounded-xl ${message.is_read ? 'bg-gray-100' : 'bg-gradient-to-br from-rose-100 to-pink-100'}`}>
         {message.is_read ? (
-          <MailOpen size={20} className="text-gray-500" />
+          <MailOpen size={20} className="text-gray-400" />
         ) : (
-          <Mail size={20} className="text-purple-600" />
+          <Mail size={20} className="text-rose-500" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`text-sm ${message.is_read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>
+          <span className={`text-sm ${message.is_read ? 'text-gray-600' : 'text-gray-800 font-semibold'}`}>
             {type === 'inbox' 
               ? (message.sender_username || message.sender_email)
               : message.sender_email /* In sent view, sender_email contains recipient */
             }
           </span>
           {!message.is_read && type === 'inbox' && (
-            <span className="px-2 py-0.5 text-xs bg-purple-600 text-white rounded-full">
+            <span className="px-2 py-0.5 text-xs bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full font-medium">
               Nieuw
             </span>
           )}

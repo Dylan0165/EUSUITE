@@ -38,29 +38,29 @@ export function Compose() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-rose-100">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-5 border-b border-rose-100">
         <h1 className="text-xl font-semibold text-gray-800">Nieuw Bericht</h1>
         <button
           onClick={() => navigate('/mail')}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2.5 hover:bg-rose-50 rounded-xl transition-colors"
         >
-          <X size={20} className="text-gray-600" />
+          <X size={20} className="text-gray-500" />
         </button>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="p-6 space-y-5">
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-sm font-medium">
             {error}
           </div>
         )}
 
         {/* Recipient */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Aan
           </label>
           <input
@@ -68,14 +68,14 @@ export function Compose() {
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
             placeholder="email@voorbeeld.nl"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+            className="w-full px-4 py-3 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition-all bg-white/50"
             required
           />
         </div>
 
         {/* Subject */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Onderwerp
           </label>
           <input
@@ -83,14 +83,14 @@ export function Compose() {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Onderwerp van je bericht"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+            className="w-full px-4 py-3 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition-all bg-white/50"
             required
           />
         </div>
 
         {/* Body */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Bericht
           </label>
           <textarea
@@ -98,7 +98,7 @@ export function Compose() {
             onChange={(e) => setBody(e.target.value)}
             placeholder="Typ je bericht hier..."
             rows={12}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all resize-none"
+            className="w-full px-4 py-3 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition-all resize-none bg-white/50"
             required
           />
         </div>
@@ -108,14 +108,14 @@ export function Compose() {
           <button
             type="button"
             onClick={() => navigate('/mail')}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 border border-rose-200 text-gray-700 rounded-xl hover:bg-rose-50 transition-colors font-medium"
           >
             Annuleren
           </button>
           <button
             type="submit"
             disabled={sending}
-            className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl hover:from-rose-600 hover:to-pink-600 transition-all disabled:opacity-50 font-medium shadow-md hover:shadow-lg"
           >
             <Send size={18} />
             {sending ? 'Verzenden...' : 'Verzenden'}

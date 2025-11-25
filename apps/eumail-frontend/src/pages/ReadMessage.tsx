@@ -53,8 +53,8 @@ export function ReadMessage() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-        <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-rose-100 p-8 text-center">
+        <div className="w-10 h-10 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-gray-500">Bericht laden...</p>
       </div>
     );
@@ -62,11 +62,11 @@ export function ReadMessage() {
 
   if (error || !message) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-        <p className="text-red-500 mb-4">{error || 'Bericht niet gevonden'}</p>
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-rose-100 p-8 text-center">
+        <p className="text-rose-500 font-medium mb-4">{error || 'Bericht niet gevonden'}</p>
         <button
           onClick={() => navigate('/mail')}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          className="px-5 py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl hover:from-rose-600 hover:to-pink-600 transition-all shadow-md"
         >
           Terug naar inbox
         </button>
@@ -84,12 +84,12 @@ export function ReadMessage() {
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-rose-100">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-5 border-b border-rose-100">
         <button
           onClick={() => navigate('/mail')}
-          className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
+          className="flex items-center gap-2 text-gray-600 hover:text-rose-600 transition-colors"
         >
           <ArrowLeft size={20} />
           <span>Terug</span>
@@ -97,7 +97,7 @@ export function ReadMessage() {
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors disabled:opacity-50"
         >
           <Trash2 size={18} />
           <span>Verwijderen</span>
@@ -105,15 +105,15 @@ export function ReadMessage() {
       </div>
 
       {/* Subject */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-rose-100">
         <h1 className="text-2xl font-semibold text-gray-800">{message.subject}</h1>
       </div>
 
       {/* Sender Info */}
-      <div className="p-6 border-b border-gray-200 bg-gray-50">
+      <div className="p-6 border-b border-rose-100 bg-gradient-to-r from-rose-50/50 to-pink-50/50">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-purple-100 rounded-full">
-            <User size={24} className="text-purple-600" />
+          <div className="p-3 bg-gradient-to-br from-rose-100 to-pink-100 rounded-xl">
+            <User size={24} className="text-rose-500" />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export function ReadMessage() {
 
       {/* Body */}
       <div className="p-6">
-        <div className="prose prose-gray max-w-none whitespace-pre-wrap">
+        <div className="prose prose-gray max-w-none whitespace-pre-wrap text-gray-700 leading-relaxed">
           {message.body}
         </div>
       </div>
