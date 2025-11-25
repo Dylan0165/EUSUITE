@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eumail-backend
+  namespace: eucloud
+  labels:
+    app: eumail-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eumail-backend
+  template:
+    metadata:
+      labels:
+        app: eumail-backend
+    spec:
+      imagePullSecrets:
+        - name: docker-registry-secret
+      containers:
+        - name: eumail-backend
+          image: dylan016504/eumail-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: eucloud-secrets
+          env:
+            - name: CORE_VALIDATE_URL
+              value: "http://eucloud-backend:8000/api/auth/validate"
+            - name: CORE_USER_LOOKUP_URL
+              value: "http://eucloud-backend:8000/api/auth/user-by-email"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10

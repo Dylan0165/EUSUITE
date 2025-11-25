@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardCard } from '../components/DashboardCard';
 import { 
   Cloud, Type, User, Settings, Calendar, Clock, Plus, 
-  FolderOpen, Bell, TrendingUp,
+  FolderOpen, Bell, TrendingUp, Mail,
   ChevronLeft, ChevronRight, X
 } from 'lucide-react';
-import { EUCLOUD_URL, EUTYPE_URL } from '../config/constants';
+import { EUCLOUD_URL, EUTYPE_URL, EUMAIL_URL, EUMAIL_API_URL } from '../config/constants';
 
 // Event type for calendar
 interface CalendarEvent {
@@ -28,6 +28,7 @@ export const Dashboard = () => {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', color: 'emerald' });
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [unreadMailCount, setUnreadMailCount] = useState(0);
 
   // Update clock every second
   useEffect(() => {
@@ -39,6 +40,28 @@ export const Dashboard = () => {
   useEffect(() => {
     localStorage.setItem('eusuite-events', JSON.stringify(events));
   }, [events]);
+
+  // Fetch unread mail count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch(`${EUMAIL_API_URL}/api/mail/unread-count`, {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadMailCount(data.count);
+        }
+      } catch (error) {
+        console.log('Could not fetch mail count');
+      }
+    };
+    
+    fetchUnreadCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const apps = [
     {
@@ -54,6 +77,14 @@ export const Dashboard = () => {
       icon: Cloud,
       color: 'blue',
       onClick: () => window.location.href = EUCLOUD_URL,
+    },
+    {
+      title: 'EUMail',
+      description: 'Interne berichten',
+      icon: Mail,
+      color: 'purple',
+      onClick: () => window.location.href = EUMAIL_URL,
+      badge: unreadMailCount > 0 ? unreadMailCount : undefined,
     },
     {
       title: 'Profiel',

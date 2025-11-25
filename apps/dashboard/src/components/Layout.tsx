@@ -12,6 +12,7 @@ export const Layout = ({ children, user, onLogout }: LayoutProps) => {
   const apps = [
     { name: 'EUType', icon: '📝', url: 'http://192.168.124.50:30081', color: 'bg-rose-900' },
     { name: 'EUCloud', icon: '☁️', url: 'http://192.168.124.50:30080', color: 'bg-blue-600' },
+    { name: 'EUMail', icon: '✉️', url: 'http://192.168.124.50:30082/mail', color: 'bg-purple-600' },
   ];
 
   return (

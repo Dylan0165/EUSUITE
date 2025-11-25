@@ -12,6 +12,8 @@ env:
   IMG_EUCLOUD_BACK: eucloud-backend
   IMG_LOGIN: eusuite-login
   IMG_TYPE: eutype-frontend
+  IMG_EUMAIL_FRONT: eumail-frontend
+  IMG_EUMAIL_BACK: eumail-backend
 
 jobs:
   build-and-deploy:
@@ -75,6 +77,24 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_TYPE }}:latest
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_TYPE }}:${{ github.sha }}
 
+      - name: Build EUMail Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/eumail-frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_FRONT }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_FRONT }}:${{ github.sha }}
+
+      - name: Build EUMail Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/eumail-backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_BACK }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_BACK }}:${{ github.sha }}
+
       # --- DEPLOY ---
       - name: Ensure Namespace & Secrets
         run: |
@@ -119,6 +139,18 @@ jobs:
           kubectl apply -f infrastructure/k8s/eutype/deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f infrastructure/k8s/eutype/service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
+      - name: Deploy EUMail Backend
+        run: |
+          sed -i 's|image: .*eumail-backend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_BACK }}:${{ github.sha }}|g' k8s/eumail/eumail-backend-deployment.yaml
+          kubectl apply -f k8s/eumail/eumail-backend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/eumail/eumail-backend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: Deploy EUMail Frontend
+        run: |
+          sed -i 's|image: .*eumail-frontend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_FRONT }}:${{ github.sha }}|g' k8s/eumail/eumail-frontend-deployment.yaml
+          kubectl apply -f k8s/eumail/eumail-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/eumail/eumail-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
+
       - name: Force Restart & Check Status
         run: |
           kubectl rollout restart deployment -n ${{ env.KUBE_NAMESPACE }}
@@ -127,3 +159,5 @@ jobs:
           kubectl rollout status deployment/eusuite-dashboard -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eusuite-login -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eutype-frontend -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/eumail-backend -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/eumail-frontend -n ${{ env.KUBE_NAMESPACE }}

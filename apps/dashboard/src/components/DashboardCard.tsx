@@ -6,6 +6,7 @@ interface DashboardCardProps {
   icon: LucideIcon;
   onClick: () => void;
   color: string;
+  badge?: number;
 }
 
 const colorClasses = {
@@ -59,6 +60,7 @@ export const DashboardCard = ({
   icon: Icon,
   onClick,
   color,
+  badge,
 }: DashboardCardProps) => {
   const colors = colorClasses[color as keyof typeof colorClasses] || colorClasses.blue;
 
@@ -67,6 +69,12 @@ export const DashboardCard = ({
       onClick={onClick}
       className={`group relative bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl dark:shadow-gray-900/50 transition-all duration-300 p-6 text-left border-2 border-transparent ${colors.border} hover:-translate-y-1`}
     >
+      {/* Badge */}
+      {badge !== undefined && badge > 0 && (
+        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[24px] text-center">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
       <div className={`inline-flex p-3 rounded-lg ${colors.bg} ${colors.text} mb-4 transition-colors duration-200`}>
         <Icon className="h-6 w-6" />
       </div>

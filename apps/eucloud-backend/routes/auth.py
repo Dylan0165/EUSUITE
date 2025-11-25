@@ -462,6 +462,40 @@ async def test_cookie(request: Request):
         }
 
 
+@router.get("/user-by-email")
+async def get_user_by_email(email: str, db: Session = Depends(get_db)):
+    """
+    Look up a user by email address.
+    
+    Used by EUMail and other services to find recipient user IDs.
+    
+    Args:
+        email: The email address to look up
+        
+    Returns:
+        User info if found, 404 if not found
+    """
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email parameter is required"
+        )
+    
+    user = db.query(User).filter(User.email == email).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    return {
+        "user_id": user.user_id,
+        "email": user.email,
+        "username": user.email
+    }
+
+
 @router.get("/debug/users")
 async def debug_users(db: Session = Depends(get_db)):
     """
