@@ -7,7 +7,7 @@ import { Compose } from './pages/Compose';
 import { Sent } from './pages/Sent';
 
 function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, error } = useAuth();
 
   // Loading state with purple mail theme
   if (loading) {
@@ -21,7 +21,27 @@ function App() {
     );
   }
 
-  // Redirect to login if not authenticated
+  // Show error state (backend down, network issues, etc.)
+  if (error && !user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-800 via-purple-700 to-purple-900">
+        <img src="/eusuite-logo.png" alt="EUSuite" className="h-16 mb-4" />
+        <div className="text-purple-200 text-3xl font-bold mb-6 tracking-wider">EUMAIL</div>
+        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 max-w-md">
+          <p className="text-red-200 text-center">{error}</p>
+          <p className="text-white/70 text-sm text-center mt-2">Probeer de pagina te vernieuwen</p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+        >
+          Opnieuw proberen
+        </button>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated (handled by useAuth)
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-800 via-purple-700 to-purple-900">
