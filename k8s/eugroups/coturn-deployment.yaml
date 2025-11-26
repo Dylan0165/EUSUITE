@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
         - name: coturn
-          image: coturn/coturn:latest
+          image: instrumentisto/coturn:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 3478
               protocol: UDP
