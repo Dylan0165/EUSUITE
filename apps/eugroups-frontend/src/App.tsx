@@ -4,6 +4,10 @@ import Layout from './components/Layout';
 import GroupsPage from './pages/GroupsPage';
 import GroupDetailPage from './pages/GroupDetailPage';
 import BoardPage from './pages/BoardPage';
+import MessagesPage from './pages/MessagesPage';
+import ContactsPage from './pages/ContactsPage';
+import CallPage from './pages/CallPage';
+import CallHistoryPage from './pages/CallHistoryPage';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -29,7 +33,12 @@ function App() {
           <Route path="groups" element={<GroupsPage />} />
           <Route path="groups/:groupId" element={<GroupDetailPage />} />
           <Route path="groups/:groupId/boards/:boardId" element={<BoardPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="messages/:conversationId" element={<MessagesPage />} />
+          <Route path="contacts" element={<ContactsPage />} />
+          <Route path="calls" element={<CallHistoryPage />} />
         </Route>
+        <Route path="/call/:roomId" element={<CallPage />} />
       </Routes>
     </BrowserRouter>
   );

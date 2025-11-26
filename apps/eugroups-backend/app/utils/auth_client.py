@@ -95,3 +95,31 @@ async def get_user_by_email(email: str) -> Optional[dict]:
             
     except httpx.RequestError:
         return None
+
+
+async def validate_token(token: str) -> Optional[dict]:
+    """
+    Validate an SSO token directly (for WebSocket connections).
+    Returns user info if valid, None if not.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                CORE_VALIDATE_URL,
+                cookies={"eusuite_token": token}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("valid"):
+                    user_data = data.get("user", data)
+                    return {
+                        "user_id": str(user_data.get("user_id") or user_data.get("id") or data.get("user_id")),
+                        "email": user_data.get("email") or data.get("email"),
+                        "username": user_data.get("username") or data.get("username"),
+                        "token": token
+                    }
+            return None
+            
+    except httpx.RequestError:
+        return None

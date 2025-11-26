@@ -207,4 +207,157 @@ export const cardsApi = {
   },
 };
 
+// ============ Users & Search API ============
+
+export const usersApi = {
+  search: async (query: string, limit = 20): Promise<{ users: import('../types').SearchUser[] }> => {
+    const { data } = await api.get('/api/users/search', { params: { q: query, limit } });
+    return data;
+  },
+
+  searchGroups: async (query: string, limit = 20): Promise<{ groups: import('../types').SearchGroup[] }> => {
+    const { data } = await api.get('/api/users/groups/search', { params: { q: query, limit } });
+    return data;
+  },
+};
+
+// ============ Contacts API ============
+
+export const contactsApi = {
+  list: async (): Promise<{ contacts: import('../types').Contact[] }> => {
+    const { data } = await api.get('/api/users/contacts');
+    return data;
+  },
+
+  add: async (
+    contactUserId: string,
+    contactEmail?: string,
+    contactName?: string,
+    nickname?: string
+  ): Promise<import('../types').Contact> => {
+    const { data } = await api.post('/api/users/contacts', null, {
+      params: { contact_user_id: contactUserId, contact_email: contactEmail, contact_name: contactName, nickname },
+    });
+    return data;
+  },
+
+  remove: async (contactId: number): Promise<void> => {
+    await api.delete(`/api/users/contacts/${contactId}`);
+  },
+
+  block: async (contactId: number): Promise<void> => {
+    await api.post(`/api/users/contacts/${contactId}/block`);
+  },
+
+  listBlocked: async (): Promise<{ blocked: import('../types').Contact[] }> => {
+    const { data } = await api.get('/api/users/blocked');
+    return data;
+  },
+};
+
+// ============ Direct Messages API ============
+
+export const dmApi = {
+  listConversations: async (): Promise<{ conversations: import('../types').Conversation[] }> => {
+    const { data } = await api.get('/api/dm/conversations');
+    return data;
+  },
+
+  getOrCreateConversation: async (
+    participantUserId: string,
+    participantEmail?: string,
+    participantName?: string
+  ): Promise<{ id: number; is_new: boolean; participant: { user_id: string; email: string | null; name: string | null } }> => {
+    const { data } = await api.post('/api/dm/conversations', null, {
+      params: { participant_user_id: participantUserId, participant_email: participantEmail, participant_name: participantName },
+    });
+    return data;
+  },
+
+  getConversation: async (conversationId: number): Promise<import('../types').Conversation> => {
+    const { data } = await api.get(`/api/dm/conversations/${conversationId}`);
+    return data;
+  },
+
+  getMessages: async (
+    conversationId: number,
+    limit = 50,
+    beforeId?: number
+  ): Promise<{ messages: import('../types').DirectMessage[] }> => {
+    const { data } = await api.get(`/api/dm/conversations/${conversationId}/messages`, {
+      params: { limit, before_id: beforeId },
+    });
+    return data;
+  },
+
+  sendMessage: async (
+    conversationId: number,
+    content: string,
+    messageType = 'text'
+  ): Promise<import('../types').DirectMessage> => {
+    const { data } = await api.post(`/api/dm/conversations/${conversationId}/messages`, null, {
+      params: { content, message_type: messageType },
+    });
+    return data;
+  },
+
+  deleteConversation: async (conversationId: number): Promise<void> => {
+    await api.delete(`/api/dm/conversations/${conversationId}`);
+  },
+
+  getUnreadCount: async (): Promise<{ total_unread: number }> => {
+    const { data } = await api.get('/api/dm/unread');
+    return data;
+  },
+};
+
+// ============ Calls API ============
+
+export const callsApi = {
+  startCall: async (
+    callType: 'voice' | 'video',
+    options: { targetUserId?: string; conversationId?: number; channelId?: number }
+  ): Promise<{ call_id: number; room_id: string; call_type: string; call_mode: string; status: string }> => {
+    const { data } = await api.post('/api/calls/start', null, {
+      params: {
+        call_type: callType,
+        target_user_id: options.targetUserId,
+        conversation_id: options.conversationId,
+        channel_id: options.channelId,
+      },
+    });
+    return data;
+  },
+
+  answerCall: async (callId: number): Promise<{ call_id: number; room_id: string; status: string }> => {
+    const { data } = await api.post(`/api/calls/${callId}/answer`);
+    return data;
+  },
+
+  declineCall: async (callId: number): Promise<{ message: string; status: string }> => {
+    const { data } = await api.post(`/api/calls/${callId}/decline`);
+    return data;
+  },
+
+  endCall: async (callId: number): Promise<{ message: string; status: string }> => {
+    const { data } = await api.post(`/api/calls/${callId}/end`);
+    return data;
+  },
+
+  getCall: async (callId: number): Promise<import('../types').Call> => {
+    const { data } = await api.get(`/api/calls/${callId}`);
+    return data;
+  },
+
+  getIncomingCalls: async (): Promise<{ incoming_calls: import('../types').IncomingCall[] }> => {
+    const { data } = await api.get('/api/calls/incoming/pending');
+    return data;
+  },
+
+  getCallHistory: async (limit = 50): Promise<{ calls: import('../types').CallHistoryItem[] }> => {
+    const { data } = await api.get('/api/calls/history', { params: { limit } });
+    return data;
+  },
+};
+
 export default api;

@@ -121,3 +121,112 @@ class BoardCard(Base):
 
     # Relationships
     column = relationship("BoardColumn", back_populates="cards")
+
+
+# ============ Direct Messages & Contacts ============
+
+class Contact(Base):
+    """User contacts - friends/connections"""
+    __tablename__ = "eugroups_contacts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(50), nullable=False, index=True)  # The user who added the contact
+    contact_user_id = Column(String(50), nullable=False, index=True)  # The contact's user ID
+    contact_email = Column(String(255), nullable=True)
+    contact_name = Column(String(100), nullable=True)
+    nickname = Column(String(100), nullable=True)  # Custom nickname for contact
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_blocked = Column(Boolean, default=False)
+
+
+class Conversation(Base):
+    """Direct message conversation between users"""
+    __tablename__ = "eugroups_conversations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    participants = relationship("ConversationParticipant", back_populates="conversation", cascade="all, delete-orphan")
+    messages = relationship("DirectMessage", back_populates="conversation", cascade="all, delete-orphan")
+
+
+class ConversationParticipant(Base):
+    """Participants in a conversation"""
+    __tablename__ = "eugroups_conversation_participants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, ForeignKey("eugroups_conversations.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(50), nullable=False, index=True)
+    user_email = Column(String(255), nullable=True)
+    user_name = Column(String(100), nullable=True)
+    joined_at = Column(DateTime, default=datetime.utcnow)
+    last_read_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    conversation = relationship("Conversation", back_populates="participants")
+
+
+class DirectMessage(Base):
+    """Direct message in a conversation"""
+    __tablename__ = "eugroups_direct_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, ForeignKey("eugroups_conversations.id", ondelete="CASCADE"), nullable=False)
+    sender_id = Column(String(50), nullable=False, index=True)
+    sender_email = Column(String(255), nullable=True)
+    sender_name = Column(String(100), nullable=True)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    is_read = Column(Boolean, default=False)
+    message_type = Column(String(20), default="text")  # text, image, file, call_started, call_ended
+
+    # Relationships
+    conversation = relationship("Conversation", back_populates="messages")
+
+
+# ============ Video/Voice Calls ============
+
+class Call(Base):
+    """Voice/Video call record"""
+    __tablename__ = "eugroups_calls"
+
+    id = Column(Integer, primary_key=True, index=True)
+    call_type = Column(String(20), nullable=False)  # voice, video
+    call_mode = Column(String(20), nullable=False)  # direct (1-on-1), group
+    
+    # For direct calls
+    conversation_id = Column(Integer, ForeignKey("eugroups_conversations.id", ondelete="SET NULL"), nullable=True)
+    # For group calls
+    channel_id = Column(Integer, ForeignKey("eugroups_channels.id", ondelete="SET NULL"), nullable=True)
+    
+    initiator_id = Column(String(50), nullable=False)
+    initiator_name = Column(String(100), nullable=True)
+    
+    status = Column(String(20), default="ringing")  # ringing, active, ended, missed, declined
+    started_at = Column(DateTime, default=datetime.utcnow)
+    answered_at = Column(DateTime, nullable=True)
+    ended_at = Column(DateTime, nullable=True)
+    
+    # WebRTC room ID for the call
+    room_id = Column(String(100), nullable=False, unique=True, index=True)
+
+    # Relationships
+    participants = relationship("CallParticipant", back_populates="call", cascade="all, delete-orphan")
+
+
+class CallParticipant(Base):
+    """Participants in a call"""
+    __tablename__ = "eugroups_call_participants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    call_id = Column(Integer, ForeignKey("eugroups_calls.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(50), nullable=False, index=True)
+    user_name = Column(String(100), nullable=True)
+    joined_at = Column(DateTime, nullable=True)
+    left_at = Column(DateTime, nullable=True)
+    status = Column(String(20), default="invited")  # invited, ringing, joined, left, declined
+
+    # Relationships
+    call = relationship("Call", back_populates="participants")

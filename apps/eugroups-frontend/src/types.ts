@@ -139,3 +139,104 @@ export interface BoardListResponse {
   boards: Board[];
   total: number;
 }
+
+// ============ Direct Messages Types ============
+
+export interface Contact {
+  id: number;
+  user_id: string;
+  email: string | null;
+  name: string | null;
+  nickname: string | null;
+  created_at: string;
+}
+
+export interface Conversation {
+  id: number;
+  participants: {
+    user_id: string;
+    email: string | null;
+    name: string | null;
+  }[];
+  last_message: {
+    content: string | null;
+    sender_id: string | null;
+    sender_name: string | null;
+    created_at: string | null;
+    type: string | null;
+  } | null;
+  unread_count: number;
+  updated_at: string;
+}
+
+export interface DirectMessage {
+  id: number;
+  sender_id: string;
+  sender_email: string | null;
+  sender_name: string | null;
+  content: string;
+  created_at: string;
+  type: string;
+}
+
+export interface SearchUser {
+  user_id: string;
+  email: string | null;
+  username: string;
+  avatar_color?: string;
+}
+
+export interface SearchGroup {
+  id: number;
+  name: string;
+  description: string | null;
+  avatar_color: string;
+  member_count: number;
+  is_member: boolean;
+}
+
+// ============ Calls Types ============
+
+export interface Call {
+  id: number;
+  room_id: string;
+  call_type: 'voice' | 'video';
+  call_mode: 'direct' | 'group';
+  status: 'ringing' | 'active' | 'ended' | 'missed' | 'declined';
+  initiator_id: string;
+  initiator_name: string | null;
+  started_at: string;
+  answered_at: string | null;
+  ended_at: string | null;
+  participants: CallParticipant[];
+}
+
+export interface CallParticipant {
+  user_id: string;
+  user_name: string | null;
+  status: 'invited' | 'ringing' | 'joined' | 'left' | 'declined';
+  joined_at: string | null;
+}
+
+export interface IncomingCall {
+  call_id: number;
+  room_id: string;
+  call_type: 'voice' | 'video';
+  call_mode: 'direct' | 'group';
+  initiator_id: string;
+  initiator_name: string | null;
+  started_at: string;
+}
+
+export interface CallHistoryItem {
+  id: number;
+  call_type: 'voice' | 'video';
+  call_mode: 'direct' | 'group';
+  status: string;
+  initiator_id: string;
+  initiator_name: string | null;
+  participants: { user_id: string; user_name: string | null }[];
+  started_at: string;
+  ended_at: string | null;
+  was_initiator: boolean;
+}
