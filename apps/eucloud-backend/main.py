@@ -22,6 +22,7 @@ from routes.shares import router as shares_router
 from routes.storage import router as storage_router
 from routes.trash import router as trash_router
 from routes.extras import router as extras_router
+from routes.users import router as users_router
 
 
 # Configure logging
@@ -110,6 +111,7 @@ app.include_router(shares_router, prefix="/api/shares", tags=["Shares"])
 app.include_router(storage_router, prefix="/api/storage", tags=["Storage"])
 app.include_router(trash_router, prefix="/api/trash", tags=["Trash"])
 app.include_router(extras_router, prefix="/api/extras", tags=["Extras"])
+app.include_router(users_router, tags=["Users"])  # Users already has /api/users prefix
 
 
 # Global exception handler

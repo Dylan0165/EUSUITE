@@ -2,7 +2,7 @@
 Users Router - Search users, manage contacts
 """
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 import httpx
 import os
@@ -19,6 +19,7 @@ CORE_BACKEND_URL = os.getenv("CORE_BACKEND_URL", "http://eucloud-backend")
 
 @router.get("/search")
 async def search_users(
+    request: Request,
     q: str = Query(..., min_length=1, description="Search query (username or email)"),
     limit: int = Query(20, ge=1, le=50),
     current_user: dict = Depends(get_current_user),
@@ -28,12 +29,15 @@ async def search_users(
     Search for users by username or email.
     This calls the core backend's user search endpoint.
     """
+    # Get token from request cookies
+    token = request.cookies.get("eusuite_token", "")
+    
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
                 f"{CORE_BACKEND_URL}/api/users/search",
                 params={"q": q, "limit": limit},
-                cookies={"eusuite_token": current_user.get("token", "")}
+                cookies={"eusuite_token": token}
             )
             
             if response.status_code == 200:

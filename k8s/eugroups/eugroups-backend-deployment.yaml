@@ -29,6 +29,8 @@ spec:
           env:
             - name: CORE_VALIDATE_URL
               value: "http://eucloud-backend/api/auth/validate"
+            - name: CORE_BACKEND_URL
+              value: "http://eucloud-backend"
           resources:
             requests:
               memory: "128Mi"
