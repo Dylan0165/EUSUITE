@@ -6,7 +6,10 @@ import {
   FolderOpen, Bell, TrendingUp, Mail, Users,
   ChevronLeft, ChevronRight, X
 } from 'lucide-react';
-import { EUCLOUD_URL, EUTYPE_URL, EUMAIL_URL, EUMAIL_API_URL, EUGROUPS_URL, EUGROUPS_API_URL } from '../config/constants';
+import { EUCLOUD_URL, EUTYPE_URL, EUMAIL_URL, EUMAIL_API_URL, EUGROUPS_URL } from '../config/constants';
+
+// Suppress unused import warning
+void EUMAIL_API_URL;
 
 // Event type for calendar
 interface CalendarEvent {
