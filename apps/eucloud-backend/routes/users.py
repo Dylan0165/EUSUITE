@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 async def search_users(
     q: str = Query(..., min_length=1, description="Search query (username/email)"),
     limit: int = Query(20, ge=1, le=50),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -27,14 +27,18 @@ async def search_users(
     """
     search_term = f"%{q.lower()}%"
     
-    # Get current user's ID
-    current_user_id = current_user.get("user_id") or current_user.get("sub")
+    # current_user is a User object, get user_id directly
+    current_user_id = current_user.user_id
     
-    # Search users by email (case insensitive)
+    logger.info(f"User search: query='{q}', current_user_id={current_user_id}")
+    
+    # Search users by email (case insensitive), exclude self
     users = db.query(User).filter(
         User.email.ilike(search_term),
-        User.user_id != current_user_id  # Exclude self
+        User.user_id != current_user_id
     ).limit(limit).all()
+    
+    logger.info(f"Found {len(users)} users matching '{q}'")
     
     # Format response
     result = []
@@ -62,7 +66,7 @@ async def search_users(
 @router.get("/api/users/{user_id}")
 async def get_user_by_id(
     user_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -87,14 +91,14 @@ async def get_user_by_id(
 async def list_users(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     List all users (for admin/contact purposes).
     Excludes sensitive information.
     """
-    current_user_id = current_user.get("user_id") or current_user.get("sub")
+    current_user_id = current_user.user_id
     
     users = db.query(User).filter(
         User.user_id != current_user_id
