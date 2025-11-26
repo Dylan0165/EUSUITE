@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: coturn
+  namespace: eucloud
+  labels:
+    app: coturn
+spec:
+  type: NodePort
+  selector:
+    app: coturn
+  ports:
+    # STUN/TURN UDP
+    - name: turn-udp
+      port: 3478
+      targetPort: 3478
+      nodePort: 30478
+      protocol: UDP
+    # STUN/TURN TCP
+    - name: turn-tcp
+      port: 3478
+      targetPort: 3478
+      nodePort: 30479
+      protocol: TCP
+    # TURNS (TLS)
+    - name: turns
+      port: 5349
+      targetPort: 5349
+      nodePort: 30549
+      protocol: TCP
+    # Relay ports (UDP)
+    - name: relay-1
+      port: 49152
+      targetPort: 49152
+      nodePort: 30152
+      protocol: UDP
+    - name: relay-2
+      port: 49153
+      targetPort: 49153
+      nodePort: 30153
+      protocol: UDP
+    - name: relay-3
+      port: 49154
+      targetPort: 49154
+      nodePort: 30154
+      protocol: UDP
+    - name: relay-4
+      port: 49155
+      targetPort: 49155
+      nodePort: 30155
+      protocol: UDP

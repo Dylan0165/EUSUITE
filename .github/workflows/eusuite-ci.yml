@@ -183,6 +183,11 @@ jobs:
           kubectl apply -f k8s/eugroups/eugroups-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f k8s/eugroups/eugroups-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
+      - name: Deploy Coturn (Self-hosted TURN/STUN)
+        run: |
+          kubectl apply -f k8s/eugroups/coturn-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/eugroups/coturn-service.yaml -n ${{ env.KUBE_NAMESPACE }}
+
       - name: Force Restart & Check Status
         run: |
           kubectl rollout restart deployment -n ${{ env.KUBE_NAMESPACE }}
@@ -195,3 +200,4 @@ jobs:
           kubectl rollout status deployment/eumail-frontend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eugroups-backend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eugroups-frontend -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/coturn -n ${{ env.KUBE_NAMESPACE }}

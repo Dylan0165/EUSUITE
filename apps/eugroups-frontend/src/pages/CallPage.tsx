@@ -41,12 +41,29 @@ export default function CallPage() {
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
 
   const API_BASE = import.meta.env.VITE_API_URL || '';
+  
+  // Self-hosted TURN/STUN server on your own K8s cluster
+  // No external dependencies - full EU sovereignty
+  const TURN_SERVER = import.meta.env.VITE_TURN_SERVER || '192.168.124.50';
+  const TURN_USER = import.meta.env.VITE_TURN_USER || 'eugroups';
+  const TURN_PASS = import.meta.env.VITE_TURN_PASS || 'EUGroupsTurn2024!';
 
-  // ICE servers configuration
   const iceServers = {
     iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
+      // Your own STUN server (no credentials needed for STUN)
+      { urls: `stun:${TURN_SERVER}:30478` },
+      // Your own TURN server (UDP - best for media)
+      {
+        urls: `turn:${TURN_SERVER}:30478?transport=udp`,
+        username: TURN_USER,
+        credential: TURN_PASS,
+      },
+      // Your own TURN server (TCP - fallback for restrictive firewalls)
+      {
+        urls: `turn:${TURN_SERVER}:30479?transport=tcp`,
+        username: TURN_USER,
+        credential: TURN_PASS,
+      },
     ],
   };
 
