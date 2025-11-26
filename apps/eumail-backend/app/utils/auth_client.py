@@ -9,7 +9,7 @@ from fastapi import Request, HTTPException
 
 CORE_VALIDATE_URL = os.getenv(
     "CORE_VALIDATE_URL", 
-    "http://eucloud-backend:8000/api/auth/validate"
+    "http://eucloud-backend/api/auth/validate"
 )
 
 
@@ -71,7 +71,7 @@ async def get_user_by_email(email: str) -> Optional[dict]:
     # In production, this would call the core backend
     lookup_url = os.getenv(
         "CORE_USER_LOOKUP_URL",
-        "http://eucloud-backend:8000/api/auth/user-by-email"
+        "http://eucloud-backend/api/auth/user-by-email"
     )
     
     try:

@@ -28,9 +28,9 @@ spec:
                 name: eucloud-secrets
           env:
             - name: CORE_VALIDATE_URL
-              value: "http://eucloud-backend:8000/api/auth/validate"
+              value: "http://eucloud-backend/api/auth/validate"
             - name: CORE_USER_LOOKUP_URL
-              value: "http://eucloud-backend:8000/api/auth/user-by-email"
+              value: "http://eucloud-backend/api/auth/user-by-email"
           resources:
             requests:
               memory: "128Mi"
