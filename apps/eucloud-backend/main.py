@@ -65,15 +65,17 @@ app.add_middleware(
         "http://192.168.124.50:30080",  # EuCloud Frontend
         "http://192.168.124.50:30081",  # EuType (document editor)
         "http://192.168.124.50:30082",  # EuMail Frontend
+        "http://192.168.124.50:30083",  # EuGroups Frontend
         "http://192.168.124.50:30500",  # Backend API (self)
         "http://192.168.124.50:30510",  # EuMail Backend API
-        "http://192.168.124.50:30600",  # EuType (production port)
+        "http://192.168.124.50:30600",  # EuGroups Backend API
         "http://192.168.124.50:30700",  # EuSheets (production port)
         "http://localhost:5173",         # Local development (Vite)
         "http://localhost:3000",         # Local development (React)
         "http://localhost:30080",
         "http://localhost:30081",
         "http://localhost:30082",
+        "http://localhost:30083",
         "http://localhost:30090"
     ],
     allow_credentials=True,              # ⭐ CRITICAL for SSO cookies

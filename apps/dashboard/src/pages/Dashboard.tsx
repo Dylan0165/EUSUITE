@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardCard } from '../components/DashboardCard';
 import { 
   Cloud, Type, User, Settings, Calendar, Clock, Plus, 
-  FolderOpen, Bell, TrendingUp, Mail,
+  FolderOpen, Bell, TrendingUp, Mail, Users,
   ChevronLeft, ChevronRight, X
 } from 'lucide-react';
-import { EUCLOUD_URL, EUTYPE_URL, EUMAIL_URL, EUMAIL_API_URL } from '../config/constants';
+import { EUCLOUD_URL, EUTYPE_URL, EUMAIL_URL, EUMAIL_API_URL, EUGROUPS_URL, EUGROUPS_API_URL } from '../config/constants';
 
 // Event type for calendar
 interface CalendarEvent {
@@ -87,6 +87,13 @@ export const Dashboard = () => {
       badge: unreadMailCount > 0 ? unreadMailCount : undefined,
     },
     {
+      title: 'EUGroups',
+      description: 'Teams & samenwerking',
+      icon: Users,
+      color: 'cyan',
+      onClick: () => window.location.href = EUGROUPS_URL,
+    },
+    {
       title: 'Profiel',
       description: 'Account instellingen',
       icon: User,
@@ -151,7 +158,7 @@ export const Dashboard = () => {
 
   // Real stats based on actual data
   const stats = [
-    { label: 'Apps', value: '4', icon: FolderOpen, color: 'text-emerald-500' },
+    { label: 'Apps', value: '5', icon: FolderOpen, color: 'text-emerald-500' },
     { label: 'Events', value: String(events.length), icon: Calendar, color: 'text-amber-500' },
     { label: 'Vandaag', value: String(todaysEvents.length), icon: Clock, color: 'text-blue-500' },
     { label: 'Komend', value: String(upcomingEvents.length), icon: Bell, color: 'text-rose-500' },

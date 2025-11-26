@@ -14,6 +14,8 @@ env:
   IMG_TYPE: eutype-frontend
   IMG_EUMAIL_FRONT: eumail-frontend
   IMG_EUMAIL_BACK: eumail-backend
+  IMG_EUGROUPS_FRONT: eugroups-frontend
+  IMG_EUGROUPS_BACK: eugroups-backend
 
 jobs:
   build-and-deploy:
@@ -95,6 +97,24 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_BACK }}:latest
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUMAIL_BACK }}:${{ github.sha }}
 
+      - name: Build EUGroups Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/eugroups-frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_FRONT }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_FRONT }}:${{ github.sha }}
+
+      - name: Build EUGroups Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/eugroups-backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_BACK }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_BACK }}:${{ github.sha }}
+
       # --- DEPLOY ---
       - name: Ensure Namespace & Secrets
         run: |
@@ -151,6 +171,18 @@ jobs:
           kubectl apply -f k8s/eumail/eumail-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f k8s/eumail/eumail-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
+      - name: Deploy EUGroups Backend
+        run: |
+          sed -i 's|image: .*eugroups-backend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_BACK }}:${{ github.sha }}|g' k8s/eugroups/eugroups-backend-deployment.yaml
+          kubectl apply -f k8s/eugroups/eugroups-backend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/eugroups/eugroups-backend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: Deploy EUGroups Frontend
+        run: |
+          sed -i 's|image: .*eugroups-frontend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_FRONT }}:${{ github.sha }}|g' k8s/eugroups/eugroups-frontend-deployment.yaml
+          kubectl apply -f k8s/eugroups/eugroups-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/eugroups/eugroups-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
+
       - name: Force Restart & Check Status
         run: |
           kubectl rollout restart deployment -n ${{ env.KUBE_NAMESPACE }}
@@ -161,3 +193,5 @@ jobs:
           kubectl rollout status deployment/eutype-frontend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eumail-backend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eumail-frontend -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/eugroups-backend -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/eugroups-frontend -n ${{ env.KUBE_NAMESPACE }}
