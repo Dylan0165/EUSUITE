@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from typing import Optional, List, Dict, Any
 from contextlib import contextmanager
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,18 @@ engine = create_engine(
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def format_datetime(value) -> Optional[str]:
+    """Convert datetime value to ISO format string. Handles both datetime objects and strings."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        # Already a string, return as-is (SQLite stores as string)
+        return value
+    if hasattr(value, 'isoformat'):
+        return value.isoformat()
+    return str(value)
 
 
 @contextmanager
@@ -75,7 +88,7 @@ def get_all_users() -> List[Dict[str, Any]]:
                     "storage_used": row.storage_used,
                     "storage_quota_gb": round(row.storage_quota / (1024**3), 2) if row.storage_quota else 0,
                     "storage_used_gb": round(row.storage_used / (1024**3), 2) if row.storage_used else 0,
-                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "created_at": row.created_at,
                     "last_login": None,
                 })
             
@@ -117,7 +130,7 @@ def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
                 "storage_used": row.storage_used,
                 "storage_quota_gb": round(row.storage_quota / (1024**3), 2) if row.storage_quota else 0,
                 "storage_used_gb": round(row.storage_used / (1024**3), 2) if row.storage_used else 0,
-                "created_at": row.created_at.isoformat() if row.created_at else None,
+                "created_at": row.created_at,
                 "last_login": None,
             }
             
@@ -247,7 +260,7 @@ def get_user_activity(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
                     activities.append({
                         "action": row.action,
                         "detail": row.detail,
-                        "timestamp": row.timestamp.isoformat() if row.timestamp else None,
+                        "timestamp": format_datetime(row.timestamp),
                         "metadata": {}
                     })
                 return activities
@@ -272,7 +285,7 @@ def get_user_activity(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
                 activities.append({
                     "action": row.action,
                     "detail": row.detail,
-                    "timestamp": row.timestamp.isoformat() if row.timestamp else None,
+                    "timestamp": format_datetime(row.timestamp),
                     "metadata": {"size": row.file_size}
                 })
             
@@ -469,7 +482,7 @@ def get_users_with_storage() -> List[Dict[str, Any]]:
                     "file_count": row.file_count,
                     "actual_storage": row.actual_storage,
                     "actual_storage_mb": round(row.actual_storage / (1024**2), 2) if row.actual_storage else 0,
-                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "created_at": row.created_at,
                     "last_login": None,
                 })
             
