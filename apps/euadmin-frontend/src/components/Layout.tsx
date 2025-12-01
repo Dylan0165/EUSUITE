@@ -23,7 +23,7 @@ const navItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { logout, admin } = useAuth();
+  const { logout, adminEmail } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -96,7 +96,7 @@ export default function Layout() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {admin || 'Admin'}
+                  {adminEmail || 'Admin'}
                 </p>
                 <p className="text-xs text-gray-500">Administrator</p>
               </div>
@@ -128,7 +128,7 @@ export default function Layout() {
             </div>
             <div className="hidden lg:block">
               <p className="text-sm text-gray-500">
-                Welcome back, <span className="font-medium text-gray-700">{admin || 'Admin'}</span>
+                Welcome back, <span className="font-medium text-gray-700">{adminEmail || 'Admin'}</span>
               </p>
             </div>
             <div className="text-xs text-gray-400">

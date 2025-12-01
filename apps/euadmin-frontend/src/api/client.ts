@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_URL = '/api';
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -94,6 +94,9 @@ export interface Pod {
   app: string;
   node: string | null;
 }
+
+// Alias for backward compatibility
+export type PodInfo = Pod;
 
 export interface PodMetrics {
   name: string;

@@ -4,10 +4,8 @@ import {
   HardDrive,
   Activity,
   Server,
-  TrendingUp,
   AlertTriangle,
   CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import { adminApi, SystemStats, Pod, PodMetrics } from '../api/client';
 import {

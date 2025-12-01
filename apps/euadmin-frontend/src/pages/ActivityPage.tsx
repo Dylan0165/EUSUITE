@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Activity, Search, RefreshCw, FileText, User, Clock } from 'lucide-react';
-import { adminApi, PodInfo } from '../api/client';
+import { adminApi } from '../api/client';
+import type { PodInfo } from '../api/client';
 
 interface LogEntry {
   timestamp: string;
@@ -46,7 +47,7 @@ export default function ActivityPage() {
     if (!selectedPod) return;
     setLoadingLogs(true);
     try {
-      const data = await adminApi.getPodLogs(selectedPod, tailLines);
+      const data = await adminApi.getLogs(selectedPod, tailLines);
       setLogs(data.logs);
       parseLogs(data.logs);
     } catch (err) {

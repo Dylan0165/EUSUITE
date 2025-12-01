@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cpu, MemoryStick, Server, RefreshCw, Play, RotateCcw } from 'lucide-react';
+import { Cpu, MemoryStick, Server, RefreshCw, RotateCcw } from 'lucide-react';
 import { adminApi, PodMetrics, Deployment } from '../api/client';
 import {
   AreaChart,
