@@ -11,14 +11,21 @@ from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://eucloud:eucloud@postgres:5432/eucloud")
+# EUCloud uses SQLite database stored in /app/instance/eucloud.db
+# This path is shared via PVC with eucloud-backend
+DATABASE_PATH = os.getenv("DATABASE_PATH", "/app/instance/eucloud.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATABASE_PATH}")
 
-# Create engine with connection pooling
+logger.info(f"Connecting to database: {DATABASE_URL}")
+
+# Create engine - SQLite needs check_same_thread=False for multi-threading
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
 engine = create_engine(
     DATABASE_URL,
-    pool_size=5,
-    max_overflow=10,
-    pool_pre_ping=True,
+    connect_args=connect_args,
     echo=False
 )
 
@@ -128,7 +135,7 @@ def get_user_storage(user_id: str) -> Dict[str, Any]:
                     COUNT(*) as file_count,
                     COALESCE(SUM(file_size), 0) as total_bytes
                 FROM files
-                WHERE owner_id = :user_id AND (is_deleted = false OR is_deleted IS NULL)
+                WHERE owner_id = :user_id AND (is_deleted = 0 OR is_deleted IS NULL)
             """), {"user_id": int(user_id)})
             
             row = result.fetchone()
@@ -150,7 +157,7 @@ def get_user_storage(user_id: str) -> Dict[str, Any]:
                     COUNT(*) as count,
                     COALESCE(SUM(file_size), 0) as bytes
                 FROM files
-                WHERE owner_id = :user_id AND (is_deleted = false OR is_deleted IS NULL)
+                WHERE owner_id = :user_id AND (is_deleted = 0 OR is_deleted IS NULL)
                 GROUP BY 1
             """), {"user_id": int(user_id)})
             
@@ -193,7 +200,7 @@ def get_total_storage() -> Dict[str, Any]:
                     COALESCE(SUM(file_size), 0) as total_bytes,
                     COUNT(DISTINCT owner_id) as user_count
                 FROM files
-                WHERE is_deleted = false OR is_deleted IS NULL
+                WHERE is_deleted = 0 OR is_deleted IS NULL
             """))
             
             row = result.fetchone()
@@ -377,7 +384,7 @@ def reset_user_storage(user_id: str) -> bool:
             
             # Soft delete all files
             session.execute(text("""
-                UPDATE files SET is_deleted = true, deleted_at = NOW() 
+                UPDATE files SET is_deleted = 1, deleted_at = datetime('now') 
                 WHERE owner_id = :user_id
             """), {"user_id": uid})
             
@@ -405,7 +412,7 @@ def get_system_stats() -> Dict[str, Any]:
             # Active users (created in last 24h as proxy for activity)
             active_result = session.execute(text("""
                 SELECT COUNT(*) as count FROM users 
-                WHERE created_at > NOW() - INTERVAL '24 hours'
+                WHERE created_at > datetime('now', '-24 hours')
             """))
             active_users = active_result.fetchone().count
             
@@ -441,7 +448,7 @@ def get_users_with_storage() -> List[Dict[str, Any]]:
                     COUNT(f.file_id) as file_count,
                     COALESCE(SUM(f.file_size), 0) as actual_storage
                 FROM users u
-                LEFT JOIN files f ON u.user_id = f.owner_id AND (f.is_deleted = false OR f.is_deleted IS NULL)
+                LEFT JOIN files f ON u.user_id = f.owner_id AND (f.is_deleted = 0 OR f.is_deleted IS NULL)
                 GROUP BY u.user_id, u.email, u.storage_quota, u.storage_used, u.created_at
                 ORDER BY u.created_at DESC
             """))

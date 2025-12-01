@@ -26,14 +26,20 @@ spec:
             - containerPort: 8000
           envFrom:
             - secretRef:
-                name: eucloud-secrets
-            - secretRef:
                 name: euadmin-secrets
           env:
             - name: KUBERNETES_NAMESPACE
               value: "eucloud"
             - name: KUBE_NAMESPACE
               value: "eucloud"
+            - name: DATABASE_PATH
+              value: "/app/instance/eucloud.db"
+            - name: DATABASE_URL
+              value: "sqlite:////app/instance/eucloud.db"
+          volumeMounts:
+            - name: database
+              mountPath: /app/instance
+              readOnly: true
           resources:
             requests:
               memory: "128Mi"
@@ -53,3 +59,7 @@ spec:
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
+      volumes:
+        - name: database
+          persistentVolumeClaim:
+            claimName: eucloud-database-pvc
