@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 COPY package*.json ./
 
 # Install dependencies (this compiles mediasoup)
-RUN npm install --only=production
+RUN npm install --omit=dev
 
 # Production image
 FROM node:20-bullseye-slim
