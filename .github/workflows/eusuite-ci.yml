@@ -210,12 +210,16 @@ jobs:
 
       - name: Deploy EUAdmin Backend
         run: |
+          kubectl delete deployment euadmin-backend -n ${{ env.KUBE_NAMESPACE }} --ignore-not-found=true
+          kubectl delete pods -n ${{ env.KUBE_NAMESPACE }} -l app=euadmin-backend --force --grace-period=0 --ignore-not-found=true
           sed -i 's|image: .*euadmin-backend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_BACK }}:${{ github.sha }}|g' k8s/euadmin/euadmin-backend-deployment.yaml
           kubectl apply -f k8s/euadmin/euadmin-backend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f k8s/euadmin/euadmin-backend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
       - name: Deploy EUAdmin Frontend
         run: |
+          kubectl delete deployment euadmin-frontend -n ${{ env.KUBE_NAMESPACE }} --ignore-not-found=true
+          kubectl delete pods -n ${{ env.KUBE_NAMESPACE }} -l app=euadmin-frontend --force --grace-period=0 --ignore-not-found=true
           sed -i 's|image: .*euadmin-frontend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_FRONT }}:${{ github.sha }}|g' k8s/euadmin/euadmin-frontend-deployment.yaml
           kubectl apply -f k8s/euadmin/euadmin-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f k8s/euadmin/euadmin-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
