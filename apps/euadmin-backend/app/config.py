@@ -12,7 +12,9 @@ class Settings(BaseSettings):
     
     # Admin Authentication
     ADMIN_EMAIL: str = "admin@test.nl"
-    ADMIN_PASSWORD_HASH: str = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.L9HJLc8rMYO6Oe"  # "admin123" hashed
+    # Plain password for dev, or Argon2 hash for production
+    # Generate hash: python -c "from argon2 import PasswordHasher; print(PasswordHasher().hash('YOUR_PASSWORD'))"
+    ADMIN_PASSWORD_HASH: str = "admin123"
     ADMIN_JWT_SECRET: str = os.getenv("ADMIN_JWT_SECRET", "super-secret-admin-key-change-in-production")
     ADMIN_JWT_ALGORITHM: str = "HS256"
     ADMIN_JWT_EXPIRE_HOURS: int = 24
