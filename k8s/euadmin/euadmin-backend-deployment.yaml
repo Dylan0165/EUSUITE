@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: euadmin-backend
+  namespace: eusuite
+  labels:
+    app: euadmin-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: euadmin-backend
+  template:
+    metadata:
+      labels:
+        app: euadmin-backend
+    spec:
+      serviceAccountName: euadmin-backend
+      containers:
+        - name: euadmin-backend
+          image: ghcr.io/dylanmontenie/euadmin-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: eucloud-secrets
+                  key: database-url
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: eucloud-secrets
+                  key: jwt-secret-key
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: euadmin-secrets
+                  key: admin-email
+            - name: ADMIN_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: euadmin-secrets
+                  key: admin-password-hash
+            - name: KUBERNETES_NAMESPACE
+              value: "eusuite"
+            - name: KUBE_NAMESPACE
+              value: "eusuite"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      imagePullSecrets:
+        - name: ghcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: euadmin-backend
+  namespace: eusuite
+spec:
+  type: NodePort
+  selector:
+    app: euadmin-backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30091

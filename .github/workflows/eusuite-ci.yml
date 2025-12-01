@@ -16,6 +16,8 @@ env:
   IMG_EUMAIL_BACK: eumail-backend
   IMG_EUGROUPS_FRONT: eugroups-frontend
   IMG_EUGROUPS_BACK: eugroups-backend
+  IMG_EUADMIN_FRONT: euadmin-frontend
+  IMG_EUADMIN_BACK: euadmin-backend
 
 jobs:
   build-and-deploy:
@@ -115,6 +117,24 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_BACK }}:latest
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_BACK }}:${{ github.sha }}
 
+      - name: Build EUAdmin Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/euadmin-frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_FRONT }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_FRONT }}:${{ github.sha }}
+
+      - name: Build EUAdmin Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/euadmin-backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_BACK }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_BACK }}:${{ github.sha }}
+
       # --- DEPLOY ---
       - name: Ensure Namespace & Secrets
         run: |
@@ -183,6 +203,21 @@ jobs:
           kubectl apply -f k8s/eugroups/eugroups-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f k8s/eugroups/eugroups-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
+      - name: Deploy EUAdmin Secrets
+        run: |
+          kubectl apply -f k8s/euadmin/euadmin-secrets.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/euadmin/euadmin-rbac.yaml
+
+      - name: Deploy EUAdmin Backend
+        run: |
+          sed -i 's|image: .*euadmin-backend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_BACK }}:${{ github.sha }}|g' k8s/euadmin/euadmin-backend-deployment.yaml
+          kubectl apply -f k8s/euadmin/euadmin-backend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: Deploy EUAdmin Frontend
+        run: |
+          sed -i 's|image: .*euadmin-frontend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_FRONT }}:${{ github.sha }}|g' k8s/euadmin/euadmin-frontend-deployment.yaml
+          kubectl apply -f k8s/euadmin/euadmin-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+
       - name: Force Restart & Check Status
         run: |
           kubectl rollout restart deployment -n ${{ env.KUBE_NAMESPACE }}
@@ -195,3 +230,5 @@ jobs:
           kubectl rollout status deployment/eumail-frontend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eugroups-backend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eugroups-frontend -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/euadmin-backend -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/euadmin-frontend -n ${{ env.KUBE_NAMESPACE }}
