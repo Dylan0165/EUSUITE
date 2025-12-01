@@ -24,27 +24,12 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: eucloud-secrets
+            - secretRef:
+                name: euadmin-secrets
           env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: eucloud-secrets
-                  key: database-url
-            - name: JWT_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: eucloud-secrets
-                  key: jwt-secret-key
-            - name: ADMIN_EMAIL
-              valueFrom:
-                secretKeyRef:
-                  name: euadmin-secrets
-                  key: admin-email
-            - name: ADMIN_PASSWORD_HASH
-              valueFrom:
-                secretKeyRef:
-                  name: euadmin-secrets
-                  key: admin-password-hash
             - name: KUBERNETES_NAMESPACE
               value: "eucloud"
             - name: KUBE_NAMESPACE
