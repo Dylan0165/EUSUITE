@@ -8,6 +8,7 @@ from typing import Optional
 from ..auth import get_current_admin
 from ..database import (
     get_all_users,
+    get_users_with_storage,
     get_user_by_id,
     get_user_storage,
     get_user_activity,
@@ -36,9 +37,9 @@ async def list_users(
     admin: dict = Depends(get_current_admin)
 ):
     """
-    Get list of all users in the system.
+    Get list of all users in the system with storage stats.
     """
-    users = get_all_users()
+    users = get_users_with_storage()
     
     # Apply pagination
     paginated = users[offset:offset + limit]

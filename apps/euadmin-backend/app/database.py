@@ -34,6 +34,7 @@ def get_db_session():
         session.commit()
     except Exception as e:
         session.rollback()
+        logger.error(f"Database error: {e}")
         raise e
     finally:
         session.close()
@@ -45,14 +46,11 @@ def get_all_users() -> List[Dict[str, Any]]:
         with get_db_session() as session:
             result = session.execute(text("""
                 SELECT 
-                    id,
                     user_id,
-                    username,
                     email,
-                    avatar_color,
-                    is_active,
-                    created_at,
-                    last_login
+                    storage_quota,
+                    storage_used,
+                    created_at
                 FROM users
                 ORDER BY created_at DESC
             """))
@@ -60,16 +58,21 @@ def get_all_users() -> List[Dict[str, Any]]:
             users = []
             for row in result:
                 users.append({
-                    "id": row.id,
-                    "user_id": row.user_id,
-                    "username": row.username,
+                    "id": row.user_id,
+                    "user_id": str(row.user_id),
+                    "username": row.email.split('@')[0] if row.email else f"user_{row.user_id}",
                     "email": row.email,
-                    "avatar_color": row.avatar_color,
-                    "is_active": row.is_active,
+                    "avatar_color": None,
+                    "is_active": True,
+                    "storage_quota": row.storage_quota,
+                    "storage_used": row.storage_used,
+                    "storage_quota_gb": round(row.storage_quota / (1024**3), 2) if row.storage_quota else 0,
+                    "storage_used_gb": round(row.storage_used / (1024**3), 2) if row.storage_used else 0,
                     "created_at": row.created_at.isoformat() if row.created_at else None,
-                    "last_login": row.last_login.isoformat() if row.last_login else None,
+                    "last_login": None,
                 })
             
+            logger.info(f"Retrieved {len(users)} users from database")
             return users
             
     except Exception as e:
@@ -83,31 +86,32 @@ def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
         with get_db_session() as session:
             result = session.execute(text("""
                 SELECT 
-                    id,
                     user_id,
-                    username,
                     email,
-                    avatar_color,
-                    is_active,
-                    created_at,
-                    last_login
+                    storage_quota,
+                    storage_used,
+                    created_at
                 FROM users
                 WHERE user_id = :user_id
-            """), {"user_id": user_id})
+            """), {"user_id": int(user_id)})
             
             row = result.fetchone()
             if not row:
                 return None
             
             return {
-                "id": row.id,
-                "user_id": row.user_id,
-                "username": row.username,
+                "id": row.user_id,
+                "user_id": str(row.user_id),
+                "username": row.email.split('@')[0] if row.email else f"user_{row.user_id}",
                 "email": row.email,
-                "avatar_color": row.avatar_color,
-                "is_active": row.is_active,
+                "avatar_color": None,
+                "is_active": True,
+                "storage_quota": row.storage_quota,
+                "storage_used": row.storage_used,
+                "storage_quota_gb": round(row.storage_quota / (1024**3), 2) if row.storage_quota else 0,
+                "storage_used_gb": round(row.storage_used / (1024**3), 2) if row.storage_used else 0,
                 "created_at": row.created_at.isoformat() if row.created_at else None,
-                "last_login": row.last_login.isoformat() if row.last_login else None,
+                "last_login": None,
             }
             
     except Exception as e:
@@ -122,10 +126,10 @@ def get_user_storage(user_id: str) -> Dict[str, Any]:
             result = session.execute(text("""
                 SELECT 
                     COUNT(*) as file_count,
-                    COALESCE(SUM(size), 0) as total_bytes
+                    COALESCE(SUM(file_size), 0) as total_bytes
                 FROM files
-                WHERE user_id = :user_id AND is_deleted = false
-            """), {"user_id": user_id})
+                WHERE owner_id = :user_id AND (is_deleted = false OR is_deleted IS NULL)
+            """), {"user_id": int(user_id)})
             
             row = result.fetchone()
             total_bytes = row.total_bytes if row else 0
@@ -135,20 +139,20 @@ def get_user_storage(user_id: str) -> Dict[str, Any]:
             result2 = session.execute(text("""
                 SELECT 
                     CASE 
-                        WHEN mimetype LIKE 'image/%' THEN 'images'
-                        WHEN mimetype LIKE 'video/%' THEN 'videos'
-                        WHEN mimetype LIKE 'audio/%' THEN 'audio'
-                        WHEN mimetype LIKE 'application/pdf' THEN 'documents'
-                        WHEN mimetype LIKE 'application/%' THEN 'documents'
-                        WHEN mimetype LIKE 'text/%' THEN 'documents'
+                        WHEN mime_type LIKE 'image/%' THEN 'images'
+                        WHEN mime_type LIKE 'video/%' THEN 'videos'
+                        WHEN mime_type LIKE 'audio/%' THEN 'audio'
+                        WHEN mime_type LIKE 'application/pdf' THEN 'documents'
+                        WHEN mime_type LIKE 'application/%' THEN 'documents'
+                        WHEN mime_type LIKE 'text/%' THEN 'documents'
                         ELSE 'other'
                     END as file_type,
                     COUNT(*) as count,
-                    COALESCE(SUM(size), 0) as bytes
+                    COALESCE(SUM(file_size), 0) as bytes
                 FROM files
-                WHERE user_id = :user_id AND is_deleted = false
+                WHERE owner_id = :user_id AND (is_deleted = false OR is_deleted IS NULL)
                 GROUP BY 1
-            """), {"user_id": user_id})
+            """), {"user_id": int(user_id)})
             
             storage_by_type = {}
             for row in result2:
@@ -186,10 +190,10 @@ def get_total_storage() -> Dict[str, Any]:
             result = session.execute(text("""
                 SELECT 
                     COUNT(*) as file_count,
-                    COALESCE(SUM(size), 0) as total_bytes,
-                    COUNT(DISTINCT user_id) as user_count
+                    COALESCE(SUM(file_size), 0) as total_bytes,
+                    COUNT(DISTINCT owner_id) as user_count
                 FROM files
-                WHERE is_deleted = false
+                WHERE is_deleted = false OR is_deleted IS NULL
             """))
             
             row = result.fetchone()
@@ -218,18 +222,43 @@ def get_user_activity(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     """Get recent activity for a user."""
     try:
         with get_db_session() as session:
-            # Get recent file uploads
+            # Check if activities table exists
+            try:
+                result = session.execute(text("""
+                    SELECT 
+                        activity_type as action,
+                        activity_details as detail,
+                        created_at as timestamp
+                    FROM activities
+                    WHERE user_id = :user_id
+                    ORDER BY created_at DESC
+                    LIMIT :limit
+                """), {"user_id": int(user_id), "limit": limit})
+                
+                activities = []
+                for row in result:
+                    activities.append({
+                        "action": row.action,
+                        "detail": row.detail,
+                        "timestamp": row.timestamp.isoformat() if row.timestamp else None,
+                        "metadata": {}
+                    })
+                return activities
+            except:
+                pass
+            
+            # Fallback: Get recent file uploads as activity
             result = session.execute(text("""
                 SELECT 
                     'upload' as action,
                     filename as detail,
                     created_at as timestamp,
-                    size
+                    file_size
                 FROM files
-                WHERE user_id = :user_id
+                WHERE owner_id = :user_id
                 ORDER BY created_at DESC
                 LIMIT :limit
-            """), {"user_id": user_id, "limit": limit})
+            """), {"user_id": int(user_id), "limit": limit})
             
             activities = []
             for row in result:
@@ -237,7 +266,7 @@ def get_user_activity(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
                     "action": row.action,
                     "detail": row.detail,
                     "timestamp": row.timestamp.isoformat() if row.timestamp else None,
-                    "metadata": {"size": row.size}
+                    "metadata": {"size": row.file_size}
                 })
             
             return activities
@@ -251,21 +280,58 @@ def delete_user(user_id: str) -> bool:
     """Delete a user and all their data."""
     try:
         with get_db_session() as session:
-            # Delete user's files first
-            session.execute(text("""
-                DELETE FROM files WHERE user_id = :user_id
-            """), {"user_id": user_id})
+            uid = int(user_id)
             
-            # Delete shares
+            # Delete shares first (foreign key constraint)
             session.execute(text("""
-                DELETE FROM file_shares WHERE shared_with_user_id = :user_id
-            """), {"user_id": user_id})
+                DELETE FROM shares WHERE created_by = :user_id
+            """), {"user_id": uid})
+            
+            # Delete file versions
+            session.execute(text("""
+                DELETE FROM file_versions WHERE file_id IN (
+                    SELECT file_id FROM files WHERE owner_id = :user_id
+                )
+            """), {"user_id": uid})
+            
+            # Delete file tags
+            session.execute(text("""
+                DELETE FROM file_tags WHERE file_id IN (
+                    SELECT file_id FROM files WHERE owner_id = :user_id
+                )
+            """), {"user_id": uid})
+            
+            # Delete comments
+            session.execute(text("""
+                DELETE FROM comments WHERE user_id = :user_id
+            """), {"user_id": uid})
+            
+            # Delete activities
+            session.execute(text("""
+                DELETE FROM activities WHERE user_id = :user_id
+            """), {"user_id": uid})
+            
+            # Delete tags
+            session.execute(text("""
+                DELETE FROM tags WHERE user_id = :user_id
+            """), {"user_id": uid})
+            
+            # Delete user's files
+            session.execute(text("""
+                DELETE FROM files WHERE owner_id = :user_id
+            """), {"user_id": uid})
+            
+            # Delete user's folders
+            session.execute(text("""
+                DELETE FROM folders WHERE owner_id = :user_id
+            """), {"user_id": uid})
             
             # Delete the user
-            result = session.execute(text("""
+            session.execute(text("""
                 DELETE FROM users WHERE user_id = :user_id
-            """), {"user_id": user_id})
+            """), {"user_id": uid})
             
+            logger.info(f"Deleted user {user_id} and all associated data")
             return True
             
     except Exception as e:
@@ -274,12 +340,13 @@ def delete_user(user_id: str) -> bool:
 
 
 def block_user(user_id: str) -> bool:
-    """Block/deactivate a user."""
+    """Block/deactivate a user - set storage quota to 0 to prevent uploads."""
     try:
         with get_db_session() as session:
             session.execute(text("""
-                UPDATE users SET is_active = false WHERE user_id = :user_id
-            """), {"user_id": user_id})
+                UPDATE users SET storage_quota = 0 WHERE user_id = :user_id
+            """), {"user_id": int(user_id)})
+            logger.info(f"Blocked user {user_id}")
             return True
             
     except Exception as e:
@@ -288,12 +355,13 @@ def block_user(user_id: str) -> bool:
 
 
 def unblock_user(user_id: str) -> bool:
-    """Unblock/activate a user."""
+    """Unblock/activate a user - restore default storage quota."""
     try:
         with get_db_session() as session:
             session.execute(text("""
-                UPDATE users SET is_active = true WHERE user_id = :user_id
-            """), {"user_id": user_id})
+                UPDATE users SET storage_quota = 5368709120 WHERE user_id = :user_id
+            """), {"user_id": int(user_id)})
+            logger.info(f"Unblocked user {user_id}")
             return True
             
     except Exception as e:
@@ -305,10 +373,20 @@ def reset_user_storage(user_id: str) -> bool:
     """Delete all files for a user (reset storage)."""
     try:
         with get_db_session() as session:
+            uid = int(user_id)
+            
             # Soft delete all files
             session.execute(text("""
-                UPDATE files SET is_deleted = true WHERE user_id = :user_id
-            """), {"user_id": user_id})
+                UPDATE files SET is_deleted = true, deleted_at = NOW() 
+                WHERE owner_id = :user_id
+            """), {"user_id": uid})
+            
+            # Reset storage_used counter
+            session.execute(text("""
+                UPDATE users SET storage_used = 0 WHERE user_id = :user_id
+            """), {"user_id": uid})
+            
+            logger.info(f"Reset storage for user {user_id}")
             return True
             
     except Exception as e:
@@ -324,10 +402,10 @@ def get_system_stats() -> Dict[str, Any]:
             users_result = session.execute(text("SELECT COUNT(*) as count FROM users"))
             total_users = users_result.fetchone().count
             
-            # Active users (logged in last 24h)
+            # Active users (created in last 24h as proxy for activity)
             active_result = session.execute(text("""
                 SELECT COUNT(*) as count FROM users 
-                WHERE last_login > NOW() - INTERVAL '24 hours'
+                WHERE created_at > NOW() - INTERVAL '24 hours'
             """))
             active_users = active_result.fetchone().count
             
@@ -347,3 +425,49 @@ def get_system_stats() -> Dict[str, Any]:
             "active_users_24h": 0,
             "total_storage": {}
         }
+
+
+def get_users_with_storage() -> List[Dict[str, Any]]:
+    """Get all users with their storage statistics."""
+    try:
+        with get_db_session() as session:
+            result = session.execute(text("""
+                SELECT 
+                    u.user_id,
+                    u.email,
+                    u.storage_quota,
+                    u.storage_used,
+                    u.created_at,
+                    COUNT(f.file_id) as file_count,
+                    COALESCE(SUM(f.file_size), 0) as actual_storage
+                FROM users u
+                LEFT JOIN files f ON u.user_id = f.owner_id AND (f.is_deleted = false OR f.is_deleted IS NULL)
+                GROUP BY u.user_id, u.email, u.storage_quota, u.storage_used, u.created_at
+                ORDER BY u.created_at DESC
+            """))
+            
+            users = []
+            for row in result:
+                users.append({
+                    "id": row.user_id,
+                    "user_id": str(row.user_id),
+                    "username": row.email.split('@')[0] if row.email else f"user_{row.user_id}",
+                    "email": row.email,
+                    "avatar_color": None,
+                    "is_active": row.storage_quota > 0,
+                    "storage_quota": row.storage_quota,
+                    "storage_used": row.storage_used,
+                    "storage_quota_gb": round(row.storage_quota / (1024**3), 2) if row.storage_quota else 0,
+                    "storage_used_gb": round(row.storage_used / (1024**3), 2) if row.storage_used else 0,
+                    "file_count": row.file_count,
+                    "actual_storage": row.actual_storage,
+                    "actual_storage_mb": round(row.actual_storage / (1024**2), 2) if row.actual_storage else 0,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "last_login": None,
+                })
+            
+            return users
+            
+    except Exception as e:
+        logger.error(f"Failed to get users with storage: {e}")
+        return []

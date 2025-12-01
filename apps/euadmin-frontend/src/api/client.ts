@@ -53,6 +53,13 @@ export interface User {
   email: string | null;
   avatar_color: string | null;
   is_active: boolean;
+  storage_quota?: number;
+  storage_used?: number;
+  storage_quota_gb?: number;
+  storage_used_gb?: number;
+  file_count?: number;
+  actual_storage?: number;
+  actual_storage_mb?: number;
   created_at: string | null;
   last_login: string | null;
 }

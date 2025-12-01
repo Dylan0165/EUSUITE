@@ -181,9 +181,10 @@ export default function UsersPage() {
             <tr>
               <th>User</th>
               <th>Email</th>
+              <th>Storage</th>
+              <th>Files</th>
               <th>Status</th>
               <th>Created</th>
-              <th>Last Login</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -200,11 +201,22 @@ export default function UsersPage() {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{user.username}</p>
-                      <p className="text-xs text-gray-500">{user.user_id}</p>
+                      <p className="text-xs text-gray-500">ID: {user.user_id}</p>
                     </div>
                   </div>
                 </td>
                 <td className="text-gray-600">{user.email || '-'}</td>
+                <td>
+                  <div className="text-sm">
+                    <p className="font-medium text-gray-900">
+                      {((user as any).actual_storage_mb || 0).toFixed(2)} MB
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      / {((user as any).storage_quota_gb || 5).toFixed(1)} GB
+                    </p>
+                  </div>
+                </td>
+                <td className="text-gray-600">{(user as any).file_count || 0}</td>
                 <td>
                   {user.is_active ? (
                     <span className="badge badge-success">Active</span>
@@ -213,7 +225,6 @@ export default function UsersPage() {
                   )}
                 </td>
                 <td className="text-gray-600 text-sm">{formatDate(user.created_at)}</td>
-                <td className="text-gray-600 text-sm">{formatDate(user.last_login)}</td>
                 <td>
                   <div className="flex items-center gap-2">
                     <button

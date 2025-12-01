@@ -33,13 +33,20 @@ class TokenValidateResponse(BaseModel):
 # ============ User Schemas ============
 
 class UserInfo(BaseModel):
-    """Basic user information."""
+    """Basic user information with storage stats."""
     id: int
     user_id: str
     username: str
     email: Optional[str]
     avatar_color: Optional[str]
     is_active: bool
+    storage_quota: Optional[int] = None
+    storage_used: Optional[int] = None
+    storage_quota_gb: Optional[float] = None
+    storage_used_gb: Optional[float] = None
+    file_count: Optional[int] = None
+    actual_storage: Optional[int] = None
+    actual_storage_mb: Optional[float] = None
     created_at: Optional[str]
     last_login: Optional[str]
 
