@@ -212,11 +212,13 @@ jobs:
         run: |
           sed -i 's|image: .*euadmin-backend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_BACK }}:${{ github.sha }}|g' k8s/euadmin/euadmin-backend-deployment.yaml
           kubectl apply -f k8s/euadmin/euadmin-backend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/euadmin/euadmin-backend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
       - name: Deploy EUAdmin Frontend
         run: |
           sed -i 's|image: .*euadmin-frontend:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUADMIN_FRONT }}:${{ github.sha }}|g' k8s/euadmin/euadmin-frontend-deployment.yaml
           kubectl apply -f k8s/euadmin/euadmin-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
+          kubectl apply -f k8s/euadmin/euadmin-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
       - name: Force Restart & Check Status
         run: |
