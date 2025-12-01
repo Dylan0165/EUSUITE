@@ -18,7 +18,7 @@ spec:
       serviceAccountName: euadmin-backend
       containers:
         - name: euadmin-backend
-          image: ghcr.io/dylanmontenie/euadmin-backend:latest
+          image: dylan016504/euadmin-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -67,7 +67,7 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
       imagePullSecrets:
-        - name: ghcr-secret
+        - name: docker-registry-secret
 ---
 apiVersion: v1
 kind: Service

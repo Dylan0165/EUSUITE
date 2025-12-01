@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: euadmin-frontend
-          image: ghcr.io/dylanmontenie/euadmin-frontend:latest
+          image: dylan016504/euadmin-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -41,7 +41,7 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
       imagePullSecrets:
-        - name: ghcr-secret
+        - name: docker-registry-secret
 ---
 apiVersion: v1
 kind: Service
