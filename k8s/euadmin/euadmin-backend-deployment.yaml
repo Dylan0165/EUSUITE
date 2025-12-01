@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: euadmin-backend
-  namespace: eusuite
+  namespace: eucloud
   labels:
     app: euadmin-backend
 spec:
@@ -44,9 +44,9 @@ spec:
                   name: euadmin-secrets
                   key: admin-password-hash
             - name: KUBERNETES_NAMESPACE
-              value: "eusuite"
+              value: "eucloud"
             - name: KUBE_NAMESPACE
-              value: "eusuite"
+              value: "eucloud"
           resources:
             requests:
               memory: "128Mi"
@@ -73,7 +73,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: euadmin-backend
-  namespace: eusuite
+  namespace: eucloud
 spec:
   type: NodePort
   selector:
