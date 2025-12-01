@@ -3,14 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   MessageSquare,
   Send,
-  Phone,
-  Video,
   Search,
   MoreVertical,
   Trash2,
   ArrowLeft,
 } from 'lucide-react';
-import { dmApi, callsApi } from '../api/client';
+import { dmApi } from '../api/client';
 import type { Conversation, DirectMessage } from '../types';
 
 export default function MessagesPage() {
@@ -106,16 +104,6 @@ export default function MessagesPage() {
       console.error('Failed to send message:', err);
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleStartCall = async (type: 'voice' | 'video') => {
-    if (!selectedConversation) return;
-    try {
-      const call = await callsApi.startCall(type, { conversationId: selectedConversation.id });
-      navigate(`/call/${call.room_id}`);
-    } catch (err) {
-      console.error('Failed to start call:', err);
     }
   };
 
@@ -262,20 +250,6 @@ export default function MessagesPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleStartCall('voice')}
-                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-                  title="Voice call"
-                >
-                  <Phone className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => handleStartCall('video')}
-                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-                  title="Video call"
-                >
-                  <Video className="h-5 w-5" />
-                </button>
                 <div className="relative">
                   <button
                     onClick={() => setShowOptions(!showOptions)}

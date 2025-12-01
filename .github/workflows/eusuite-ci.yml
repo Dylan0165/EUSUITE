@@ -16,7 +16,6 @@ env:
   IMG_EUMAIL_BACK: eumail-backend
   IMG_EUGROUPS_FRONT: eugroups-frontend
   IMG_EUGROUPS_BACK: eugroups-backend
-  IMG_EUGROUPS_MEDIA: eugroups-media-server
 
 jobs:
   build-and-deploy:
@@ -116,15 +115,6 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_BACK }}:latest
             ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_BACK }}:${{ github.sha }}
 
-      - name: Build EUGroups Media Server
-        uses: docker/build-push-action@v5
-        with:
-          context: ./apps/eugroups-media-server
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_MEDIA }}:latest
-            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_MEDIA }}:${{ github.sha }}
-
       # --- DEPLOY ---
       - name: Ensure Namespace & Secrets
         run: |
@@ -193,15 +183,6 @@ jobs:
           kubectl apply -f k8s/eugroups/eugroups-frontend-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
           kubectl apply -f k8s/eugroups/eugroups-frontend-service.yaml -n ${{ env.KUBE_NAMESPACE }}
 
-      - name: Deploy Coturn (Self-hosted TURN/STUN)
-        run: |
-          kubectl apply -f k8s/eugroups/coturn-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
-
-      - name: Deploy EUGroups Media Server
-        run: |
-          sed -i 's|image: .*eugroups-media-server:.*|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMG_EUGROUPS_MEDIA }}:${{ github.sha }}|g' k8s/eugroups/eugroups-media-deployment.yaml
-          kubectl apply -f k8s/eugroups/eugroups-media-deployment.yaml -n ${{ env.KUBE_NAMESPACE }}
-
       - name: Force Restart & Check Status
         run: |
           kubectl rollout restart deployment -n ${{ env.KUBE_NAMESPACE }}
@@ -214,4 +195,3 @@ jobs:
           kubectl rollout status deployment/eumail-frontend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eugroups-backend -n ${{ env.KUBE_NAMESPACE }}
           kubectl rollout status deployment/eugroups-frontend -n ${{ env.KUBE_NAMESPACE }}
-          kubectl rollout status deployment/eugroups-media -n ${{ env.KUBE_NAMESPACE }}

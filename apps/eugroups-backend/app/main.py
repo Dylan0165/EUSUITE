@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db
-from .routers import groups, channels, boards, users, dm, calls
+from .routers import groups, channels, boards, users, dm
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -74,7 +74,6 @@ app.include_router(channels.router, prefix="/api")
 app.include_router(boards.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(dm.router, prefix="/api")
-app.include_router(calls.router, prefix="/api")
 
 
 @app.get("/")

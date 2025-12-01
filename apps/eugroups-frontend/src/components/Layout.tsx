@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Users, Home, MessageSquare, UserCircle, Search, Phone } from 'lucide-react';
+import { Users, Home, MessageSquare, UserCircle, Search } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
 import { dmApi } from '../api/client';
 
@@ -46,7 +46,6 @@ export default function Layout() {
     { path: '/groups', icon: Users, label: 'Groups' },
     { path: '/messages', icon: MessageSquare, label: 'Messages', badge: unreadDMs },
     { path: '/contacts', icon: UserCircle, label: 'Contacts' },
-    { path: '/calls', icon: Phone, label: 'Call History' },
   ];
 
   return (

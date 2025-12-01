@@ -4,15 +4,13 @@ import {
   Users,
   UserPlus,
   MessageSquare,
-  Phone,
-  Video,
   Search,
   MoreVertical,
   Trash2,
   Ban,
   X,
 } from 'lucide-react';
-import { contactsApi, usersApi, dmApi, callsApi } from '../api/client';
+import { contactsApi, usersApi, dmApi } from '../api/client';
 import type { Contact, SearchUser } from '../types';
 
 export default function ContactsPage() {
@@ -106,15 +104,6 @@ export default function ContactsPage() {
     }
   };
 
-  const handleStartCall = async (contact: Contact, type: 'voice' | 'video') => {
-    try {
-      const call = await callsApi.startCall(type, { targetUserId: contact.user_id });
-      navigate(`/call/${call.room_id}`);
-    } catch (err) {
-      console.error('Failed to start call:', err);
-    }
-  };
-
   const getInitials = (name: string | null, email: string | null) => {
     const displayName = name || email?.split('@')[0] || 'U';
     return displayName
@@ -186,20 +175,6 @@ export default function ContactsPage() {
                     title="Message"
                   >
                     <MessageSquare className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleStartCall(contact, 'voice')}
-                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-                    title="Voice call"
-                  >
-                    <Phone className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleStartCall(contact, 'video')}
-                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-                    title="Video call"
-                  >
-                    <Video className="h-5 w-5" />
                   </button>
                   <div className="relative">
                     <button
