@@ -21,7 +21,7 @@ spec:
       initContainers:
         - name: fix-permissions
           image: busybox:latest
-          command: ['sh', '-c', 'chmod 666 /app/instance/eucloud.db || true']
+          command: ['sh', '-c', 'chmod 777 /app/instance && chmod 666 /app/instance/eucloud.db || true']
           volumeMounts:
             - name: database
               mountPath: /app/instance
