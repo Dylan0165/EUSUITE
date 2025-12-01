@@ -39,7 +39,7 @@ spec:
           volumeMounts:
             - name: database
               mountPath: /app/instance
-              readOnly: true
+              readOnly: false
           resources:
             requests:
               memory: "128Mi"
