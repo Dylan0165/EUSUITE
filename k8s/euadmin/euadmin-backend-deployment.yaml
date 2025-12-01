@@ -18,6 +18,15 @@ spec:
       imagePullSecrets:
         - name: docker-registry-secret
       serviceAccountName: euadmin-backend
+      initContainers:
+        - name: fix-permissions
+          image: busybox:latest
+          command: ['sh', '-c', 'chmod 666 /app/instance/eucloud.db || true']
+          volumeMounts:
+            - name: database
+              mountPath: /app/instance
+          securityContext:
+            runAsUser: 0
       containers:
         - name: euadmin-backend
           image: dylan016504/euadmin-backend:latest
