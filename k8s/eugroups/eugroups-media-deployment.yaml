@@ -36,7 +36,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: eucloud-secrets
-                  key: JWT_SECRET_KEY
+                  key: jwt-secret-key
           resources:
             requests:
               memory: "256Mi"
