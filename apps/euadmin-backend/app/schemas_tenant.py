@@ -227,15 +227,15 @@ class UserCreatedResponse(BaseSchema):
 
 class BrandingColors(BaseSchema):
     """Color configuration for branding."""
-    primary: str = Field(default="#1E40AF", regex=r'^#[0-9A-Fa-f]{6}$')
-    secondary: str = Field(default="#3B82F6", regex=r'^#[0-9A-Fa-f]{6}$')
-    accent: str = Field(default="#60A5FA", regex=r'^#[0-9A-Fa-f]{6}$')
-    background: str = Field(default="#F3F4F6", regex=r'^#[0-9A-Fa-f]{6}$')
-    text: str = Field(default="#1F2937", regex=r'^#[0-9A-Fa-f]{6}$')
-    headerBg: str = Field(default="#1E40AF", regex=r'^#[0-9A-Fa-f]{6}$')
-    headerText: str = Field(default="#FFFFFF", regex=r'^#[0-9A-Fa-f]{6}$')
-    sidebarBg: str = Field(default="#1F2937", regex=r'^#[0-9A-Fa-f]{6}$')
-    sidebarText: str = Field(default="#F9FAFB", regex=r'^#[0-9A-Fa-f]{6}$')
+    primary: str = Field(default="#1E40AF", pattern=r'^#[0-9A-Fa-f]{6}$')
+    secondary: str = Field(default="#3B82F6", pattern=r'^#[0-9A-Fa-f]{6}$')
+    accent: str = Field(default="#60A5FA", pattern=r'^#[0-9A-Fa-f]{6}$')
+    background: str = Field(default="#F3F4F6", pattern=r'^#[0-9A-Fa-f]{6}$')
+    text: str = Field(default="#1F2937", pattern=r'^#[0-9A-Fa-f]{6}$')
+    headerBg: str = Field(default="#1E40AF", pattern=r'^#[0-9A-Fa-f]{6}$')
+    headerText: str = Field(default="#FFFFFF", pattern=r'^#[0-9A-Fa-f]{6}$')
+    sidebarBg: str = Field(default="#1F2937", pattern=r'^#[0-9A-Fa-f]{6}$')
+    sidebarText: str = Field(default="#F9FAFB", pattern=r'^#[0-9A-Fa-f]{6}$')
 
 
 class BrandingTypography(BaseSchema):
