@@ -1,6 +1,6 @@
 """
 EUAdmin Backend - Admin Monitoring and Control Dashboard
-Main FastAPI application entry point.
+Multi-tenant platform for EUSuite ecosystem management.
 """
 import os
 import logging
@@ -9,7 +9,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
+from .tenant_database import init_tenant_db
+
+# Import existing routers
 from .routers import auth, users, system
+
+# Import new tenant management routers
+from .routers import companies, company_users, branding, storage_policy, deployments, platform
 
 # Configure logging
 logging.basicConfig(
@@ -26,14 +32,19 @@ async def lifespan(app: FastAPI):
     logger.info("Starting EUAdmin Backend...")
     logger.info(f"Admin email: {settings.ADMIN_EMAIL}")
     logger.info(f"Kubernetes namespace: {settings.KUBE_NAMESPACE}")
+    
+    # Initialize tenant database
+    init_tenant_db()
+    logger.info("Tenant database initialized")
+    
     yield
     logger.info("Shutting down EUAdmin Backend...")
 
 
 app = FastAPI(
     title="EUAdmin API",
-    description="Admin Monitoring and Control Dashboard for EUSuite",
-    version="1.0.0",
+    description="Multi-tenant Admin Platform for EUSuite - Manage companies, users, deployments, branding, and storage policies",
+    version="2.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -52,9 +63,18 @@ app.add_middleware(
 )
 
 # Include routers with /api prefix
+# Existing monitoring routers
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(system.router, prefix="/api")
+
+# Multi-tenant platform routers
+app.include_router(companies.router, prefix="/api")
+app.include_router(company_users.router, prefix="/api")
+app.include_router(branding.router, prefix="/api")
+app.include_router(storage_policy.router, prefix="/api")
+app.include_router(deployments.router, prefix="/api")
+app.include_router(platform.router, prefix="/api")
 
 
 @app.get("/")
@@ -62,9 +82,17 @@ async def root():
     """Root endpoint."""
     return {
         "service": "EUAdmin",
-        "version": "1.0.0",
-        "description": "Admin Monitoring and Control Dashboard for EUSuite",
-        "docs": "/docs"
+        "version": "2.0.0",
+        "description": "Multi-tenant Admin Platform for EUSuite",
+        "docs": "/docs",
+        "features": [
+            "Company/Tenant Management",
+            "User Management",
+            "Branding Engine",
+            "Storage Policies",
+            "Kubernetes Deployments",
+            "Real-time Deployment Logs"
+        ]
     }
 
 

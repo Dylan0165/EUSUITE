@@ -21,10 +21,12 @@ spec:
       initContainers:
         - name: fix-permissions
           image: busybox:latest
-          command: ['sh', '-c', 'chmod 777 /app/instance && chmod 666 /app/instance/eucloud.db || true']
+          command: ['sh', '-c', 'chmod 777 /app/instance && chmod 666 /app/instance/eucloud.db || true && mkdir -p /app/data && chmod 777 /app/data']
           volumeMounts:
             - name: database
               mountPath: /app/instance
+            - name: tenant-database
+              mountPath: /app/data
           securityContext:
             runAsUser: 0
       containers:
@@ -45,17 +47,30 @@ spec:
               value: "/app/instance/eucloud.db"
             - name: DATABASE_URL
               value: "sqlite:////app/instance/eucloud.db"
+            - name: TENANT_DATABASE_PATH
+              value: "/app/data/tenant.db"
+            - name: TENANT_DATABASE_URL
+              value: "sqlite:////app/data/tenant.db"
+            - name: DOCKER_REGISTRY
+              value: "dylan016504"
+            - name: NODEPORT_RANGE_START
+              value: "30100"
+            - name: NODEPORT_RANGE_END
+              value: "30899"
           volumeMounts:
             - name: database
               mountPath: /app/instance
+              readOnly: false
+            - name: tenant-database
+              mountPath: /app/data
               readOnly: false
           resources:
             requests:
               memory: "128Mi"
               cpu: "100m"
             limits:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "512Mi"
+              cpu: "500m"
           livenessProbe:
             httpGet:
               path: /health
@@ -72,3 +87,18 @@ spec:
         - name: database
           persistentVolumeClaim:
             claimName: eucloud-database-pvc
+        - name: tenant-database
+          persistentVolumeClaim:
+            claimName: euadmin-tenant-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: euadmin-tenant-pvc
+  namespace: eucloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

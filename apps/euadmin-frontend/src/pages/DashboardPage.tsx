@@ -6,8 +6,12 @@ import {
   Server,
   AlertTriangle,
   CheckCircle,
+  Building2,
+  Rocket,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { adminApi, SystemStats, Pod, PodMetrics } from '../api/client';
+import { platformApi, type PlatformStats } from '../api/tenant';
 import {
   BarChart,
   Bar,
@@ -23,6 +27,7 @@ import {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
   const [pods, setPods] = useState<Pod[]>([]);
   const [metrics, setMetrics] = useState<PodMetrics[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,14 +41,16 @@ export default function DashboardPage() {
 
   const loadDashboardData = async () => {
     try {
-      const [statsData, podsData, usageData] = await Promise.all([
+      const [statsData, podsData, usageData, platformData] = await Promise.all([
         adminApi.getSystemStats(),
         adminApi.getPods(),
         adminApi.getSystemUsage(),
+        platformApi.getStats().catch(() => null),
       ]);
       setStats(statsData);
       setPods(podsData.pods);
       setMetrics(usageData.pods);
+      setPlatformStats(platformData);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
@@ -171,6 +178,65 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Multi-Tenant Stats */}
+      {platformStats && (
+        <div className="admin-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Multi-Tenant Platform</h3>
+            <Link
+              to="/companies"
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            >
+              View All Tenants →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Building2 className="w-4 h-4 text-primary-600" />
+                <span className="text-xs text-gray-500">Total Companies</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{platformStats.total_companies}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-xs text-gray-500">Active</span>
+              </div>
+              <p className="text-2xl font-bold text-green-600">{platformStats.active_companies}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                <span className="text-xs text-gray-500">Pending</span>
+              </div>
+              <p className="text-2xl font-bold text-yellow-600">{platformStats.pending_approval}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="w-4 h-4 text-blue-600" />
+                <span className="text-xs text-gray-500">Tenant Users</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{platformStats.total_users}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Rocket className="w-4 h-4 text-purple-600" />
+                <span className="text-xs text-gray-500">Deployments</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{platformStats.total_deployments}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Server className="w-4 h-4 text-orange-600" />
+                <span className="text-xs text-gray-500">Namespaces</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{platformStats.active_namespaces}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

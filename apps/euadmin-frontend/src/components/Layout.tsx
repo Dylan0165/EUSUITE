@@ -9,12 +9,14 @@ import {
   Shield,
   Menu,
   X,
+  Building2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/companies', icon: Building2, label: 'Tenants' },
   { to: '/users', icon: Users, label: 'Users' },
   { to: '/storage', icon: HardDrive, label: 'Storage' },
   { to: '/system', icon: Server, label: 'System' },

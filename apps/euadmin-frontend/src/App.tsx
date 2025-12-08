@@ -7,6 +7,9 @@ import UsersPage from './pages/UsersPage';
 import StoragePage from './pages/StoragePage';
 import SystemPage from './pages/SystemPage';
 import ActivityPage from './pages/ActivityPage';
+import CompaniesPage from './pages/CompaniesPage';
+import CompanyDetailPage from './pages/CompanyDetailPage';
+import DeploymentWizardPage from './pages/DeploymentWizardPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -74,6 +77,9 @@ function AppRoutes() {
         <Route path="storage" element={<StoragePage />} />
         <Route path="system" element={<SystemPage />} />
         <Route path="activity" element={<ActivityPage />} />
+        <Route path="companies" element={<CompaniesPage />} />
+        <Route path="companies/:companyId" element={<CompanyDetailPage />} />
+        <Route path="companies/:companyId/deploy" element={<DeploymentWizardPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
