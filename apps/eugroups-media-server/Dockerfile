@@ -1,5 +1,5 @@
 # mediasoup needs native compilation, so we use a multi-stage build
-FROM node:20-bullseye as builder
+FROM node:22-bookworm as builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY package*.json ./
 RUN npm install --omit=dev
 
 # Production image
-FROM node:20-bullseye-slim
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
